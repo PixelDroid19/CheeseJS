@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from './theme-provider.jsx';
 import { HeaderBar } from './header-bar.jsx';
-import { SidebarPanel } from './sidebar-panel.jsx';
 import { DevPanel } from '../dev-panel/dev-panel.jsx';
+import { FloatingToolbar } from '../floating-toolbar/floating-toolbar.jsx';
+import { ModalManager } from '../modal/modal-manager.jsx';
 import { useTheme } from './theme-provider.jsx';
 import { configService } from '../../services/config-service.js';
 import { eventBus } from '../../utils/event-bus.js';
 import './app-shell.css';
+
+// Importar estilos globales
+import '../../styles/colors.css';
+import '../modal/modals/modal-styles.css';
 
 /**
  * App Shell - Contenedor principal de la aplicación
@@ -14,12 +19,10 @@ import './app-shell.css';
  */
 const AppShellContent = ({ children }) => {
   const { currentTheme, isDarkTheme } = useTheme();
-  const [showSidebar, setShowSidebar] = useState(true);
   const [showConsole, setShowConsole] = useState(true);
-  const [sidebarWidth, setSidebarWidth] = useState(250);
   const [consoleHeight, setConsoleHeight] = useState(300);
   const [isResizing, setIsResizing] = useState(false);
-  const [resizeType, setResizeType] = useState(null);
+  const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -29,13 +32,12 @@ const AppShellContent = ({ children }) => {
         await configService.initialize();
         
         // Cargar configuración de layout
-        setShowSidebar(configService.get('layout.showSidebar', true));
         setShowConsole(configService.get('layout.showConsole', true));
-        setSidebarWidth(configService.get('layout.sidebarWidth', 250));
         setConsoleHeight(configService.get('layout.consoleHeight', 300));
+        setToolbarCollapsed(configService.get('layout.toolbarCollapsed', false));
         
         setIsInitialized(true);
-        console.log('🏗️ App Shell inicializado');
+        console.log('🏗️ App Shell inicializado - Nueva arquitectura sin sidebar');
       } catch (error) {
         console.error('❌ Error al inicializar App Shell:', error);
         setIsInitialized(true);
@@ -49,36 +51,28 @@ const AppShellContent = ({ children }) => {
       const { key, newValue } = data;
       
       switch (key) {
-        case 'layout.showSidebar':
-          setShowSidebar(newValue);
-          break;
         case 'layout.showConsole':
           setShowConsole(newValue);
-          break;
-        case 'layout.sidebarWidth':
-          setSidebarWidth(newValue);
           break;
         case 'layout.consoleHeight':
           setConsoleHeight(newValue);
           break;
+        case 'layout.toolbarCollapsed':
+          setToolbarCollapsed(newValue);
+          break;
       }
+    });
+
+    // Suscribirse a eventos del toolbar flotante
+    const unsubscribeConsoleToggle = eventBus.subscribe('console:toggle-requested', () => {
+      toggleConsole();
     });
 
     return () => {
       unsubscribeConfigChanged();
+      unsubscribeConsoleToggle();
     };
   }, []);
-
-  /**
-   * Alternar visibilidad del sidebar
-   */
-  const toggleSidebar = () => {
-    const newShowSidebar = !showSidebar;
-    setShowSidebar(newShowSidebar);
-    configService.set('layout.showSidebar', newShowSidebar);
-    
-    eventBus.emit('layout:sidebar-toggled', { visible: newShowSidebar });
-  };
 
   /**
    * Alternar visibilidad de la consola
@@ -92,32 +86,34 @@ const AppShellContent = ({ children }) => {
   };
 
   /**
-   * Iniciar redimensionamiento
+   * Toggle del toolbar flotante
    */
-  const startResize = (type, event) => {
+  const toggleToolbar = () => {
+    const newCollapsed = !toolbarCollapsed;
+    setToolbarCollapsed(newCollapsed);
+    configService.set('layout.toolbarCollapsed', newCollapsed);
+  };
+
+  /**
+   * Iniciar redimensionamiento de la consola
+   */
+  const startResize = (event) => {
     event.preventDefault();
     setIsResizing(true);
-    setResizeType(type);
     
     document.addEventListener('mousemove', handleResize);
     document.addEventListener('mouseup', stopResize);
-    document.body.style.cursor = type === 'sidebar' ? 'ew-resize' : 'ns-resize';
+    document.body.style.cursor = 'ns-resize';
     document.body.style.userSelect = 'none';
   };
 
   /**
-   * Manejar redimensionamiento
+   * Manejar redimensionamiento de la consola
    */
   const handleResize = (event) => {
-    if (!isResizing || !resizeType) return;
-
-    if (resizeType === 'sidebar') {
-      const newWidth = Math.max(200, Math.min(500, event.clientX));
-      setSidebarWidth(newWidth);
-    } else if (resizeType === 'console') {
-      const newHeight = Math.max(150, Math.min(400, window.innerHeight - event.clientY));
-      setConsoleHeight(newHeight);
-    }
+    if (!isResizing) return;
+    const newHeight = Math.max(150, Math.min(400, window.innerHeight - event.clientY));
+    setConsoleHeight(newHeight);
   };
 
   /**
@@ -127,19 +123,14 @@ const AppShellContent = ({ children }) => {
     if (!isResizing) return;
     
     setIsResizing(false);
-    setResizeType(null);
     
     document.removeEventListener('mousemove', handleResize);
     document.removeEventListener('mouseup', stopResize);
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
     
-    // Guardar nuevas dimensiones
-    if (resizeType === 'sidebar') {
-      configService.set('layout.sidebarWidth', sidebarWidth);
-    } else if (resizeType === 'console') {
-      configService.set('layout.consoleHeight', consoleHeight);
-    }
+    // Guardar nueva altura
+    configService.set('layout.consoleHeight', consoleHeight);
   };
 
   /**
@@ -147,12 +138,6 @@ const AppShellContent = ({ children }) => {
    */
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Ctrl/Cmd + B - Toggle Sidebar
-      if ((event.ctrlKey || event.metaKey) && event.key === 'b') {
-        event.preventDefault();
-        toggleSidebar();
-      }
-      
       // Ctrl/Cmd + ` - Toggle Console
       if ((event.ctrlKey || event.metaKey) && event.key === '`') {
         event.preventDefault();
@@ -162,7 +147,7 @@ const AppShellContent = ({ children }) => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showSidebar, showConsole]);
+  }, [showConsole]);
 
   if (!isInitialized) {
     return (
@@ -181,34 +166,16 @@ const AppShellContent = ({ children }) => {
 
   return (
     <div className={`app-shell theme-${currentTheme} ${isDarkTheme() ? 'dark' : 'light'}`}>
-      {/* Header Bar */}
+      {/* Header Bar Simplificado */}
       <HeaderBar 
-        onToggleSidebar={toggleSidebar}
         onToggleConsole={toggleConsole}
-        showSidebar={showSidebar}
         showConsole={showConsole}
       />
       
-      {/* Main Layout Container */}
-      <div className="app-main" style={{
-        gridTemplateColumns: showSidebar ? `${sidebarWidth}px 4px 1fr` : '1fr'
-      }}>
-        {/* Sidebar Panel */}
-        {showSidebar && (
-          <>
-            <SidebarPanel width={sidebarWidth} />
-            
-            {/* Sidebar Resizer */}
-            <div 
-              className="resizer resizer-vertical"
-              onMouseDown={(e) => startResize('sidebar', e)}
-              style={{ cursor: isResizing && resizeType === 'sidebar' ? 'ew-resize' : 'ew-resize' }}
-            />
-          </>
-        )}
-        
-        {/* Main Content Area */}
-        <div className="content-area" style={{
+      {/* Main Layout Container - Sin Sidebar */}
+      <div className="app-main app-main--no-sidebar">
+        {/* Editor y Content Area */}
+        <div className="app-content" style={{
           gridTemplateRows: showConsole ? `1fr 4px ${consoleHeight}px` : '1fr'
         }}>
           {/* Editor Panel (children) */}
@@ -216,19 +183,18 @@ const AppShellContent = ({ children }) => {
             {children}
           </div>
           
-          {/* Console Resizer */}
+          {/* Console Resize Handle */}
           {showConsole && (
             <div 
-              className="resizer resizer-horizontal"
-              onMouseDown={(e) => startResize('console', e)}
-              style={{ cursor: isResizing && resizeType === 'console' ? 'ns-resize' : 'ns-resize' }}
+              className="resize-handle resize-handle--horizontal"
+              onMouseDown={startResize}
             />
           )}
           
           {/* Console Panel */}
           {showConsole && (
             <div 
-              className="console-container"
+              className="app-console"
               style={{ height: `${consoleHeight}px` }}
             >
               <DevPanel />
@@ -237,10 +203,18 @@ const AppShellContent = ({ children }) => {
         </div>
       </div>
       
-      {/* Overlay de redimensionamiento */}
-      {isResizing && (
-        <div className="resize-overlay" />
-      )}
+      {/* Floating Toolbar */}
+      <FloatingToolbar 
+        position="bottom-center"
+        isCollapsed={toolbarCollapsed}
+        onToggle={toggleToolbar}
+      />
+      
+      {/* Modal Manager */}
+      <ModalManager />
+      
+      {/* Background overlay cuando se está redimensionando */}
+      {isResizing && <div className="resize-overlay" />}
     </div>
   );
 };

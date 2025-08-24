@@ -11,9 +11,7 @@ import './header-bar.css';
  * Usa los nuevos hooks para eliminar duplicación de código
  */
 export const HeaderBar = ({ 
-  onToggleSidebar, 
   onToggleConsole, 
-  showSidebar, 
   showConsole 
 }) => {
   const { currentTheme, toggleTheme, availableThemes } = useTheme();
@@ -41,22 +39,9 @@ export const HeaderBar = ({
   }, [i18nReady]);
 
   /**
-   * Manejar ejecución de código
+   * Simplificado - Solo maneja funciones básicas del header
+   * Las acciones principales están en el FloatingToolbar
    */
-  const handleRunCode = () => {
-    if (canStop) {
-      stopExecution();
-    } else if (canExecute) {
-      emit('code:run-requested'); // Emitir evento para que Monaco maneje
-    }
-  };
-
-  /**
-   * Manejar instalación de paquetes
-   */
-  const handleInstallPackage = () => {
-    emit('package:install-dialog-requested');
-  };
 
   /**
    * Cambiar idioma
@@ -84,22 +69,10 @@ export const HeaderBar = ({
   };
 
   /**
-   * Manejar atajos de teclado
+   * Manejar atajos de teclado (simplificado)
    */
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Ctrl/Cmd + Enter - Ejecutar código
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-        event.preventDefault();
-        handleRunCode();
-      }
-      
-      // Ctrl/Cmd + Shift + P - Instalar paquete
-      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'P') {
-        event.preventDefault();
-        handleInstallPackage();
-      }
-      
       // Escape - Cerrar menús
       if (event.key === 'Escape') {
         setShowThemeMenu(false);
@@ -110,7 +83,7 @@ export const HeaderBar = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [canExecute, canStop]); // Dependencias actualizadas
+  }, []);
 
   /**
    * Cerrar menús al hacer clic fuera
@@ -139,49 +112,17 @@ export const HeaderBar = ({
         </div>
       </div>
 
-      {/* Controles Centrales */}
+      {/* Controles Centrales - Simplificado */}
       <div className="header-center">
-        <div className="control-group">
-          {/* Botón Ejecutar/Detener */}
-          <button 
-            className={`header-button primary ${isExecuting ? 'executing' : ''}`}
-            onClick={handleRunCode}
-            title={isExecuting ? t('header.stop') : t('header.run')}
-          >
-            <span className="button-icon">
-              {isExecuting ? '⏹️' : '▶️'}
-            </span>
-            <span className="button-text">
-              {isExecuting ? t('header.stop') : t('header.run')}
-            </span>
-            {isExecuting && <div className="executing-indicator"></div>}
-          </button>
-
-          {/* Botón Instalar Paquete */}
-          <button 
-            className="header-button"
-            onClick={handleInstallPackage}
-            title={t('header.install')}
-          >
-            <span className="button-icon">📦</span>
-            <span className="button-text">{t('header.install')}</span>
-          </button>
+        <div className="breadcrumb">
+          <span className="breadcrumb-item">📄 index.js</span>
         </div>
       </div>
 
       {/* Controles de la Derecha */}
       <div className="header-right">
         <div className="control-group">
-          {/* Toggle Sidebar */}
-          <button 
-            className={`header-button icon-only ${showSidebar ? 'active' : ''}`}
-            onClick={onToggleSidebar}
-            title="Toggle Sidebar (Ctrl+B)"
-          >
-            <span className="button-icon">📂</span>
-          </button>
-
-          {/* Toggle Console */}
+          {/* Toggle Console - Único control que queda */}
           <button 
             className={`header-button icon-only ${showConsole ? 'active' : ''}`}
             onClick={onToggleConsole}

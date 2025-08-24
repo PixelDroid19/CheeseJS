@@ -1,0 +1,229 @@
+/* Modal Component Styles */
+.ui-modal__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--surface-overlay);
+  backdrop-filter: blur(4px);
+  z-index: var(--z-modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  
+  /* Animación de entrada */
+  animation: ui-modal-overlay-enter var(--transition-normal) ease-out;
+}
+
+.ui-modal {
+  position: relative;
+  z-index: var(--z-modal);
+  max-height: 90vh;
+  max-width: 90vw;
+  width: 100%;
+  
+  /* Animación de entrada */
+  animation: ui-modal-enter var(--transition-normal) ease-out;
+}
+
+.ui-modal__content {
+  background-color: var(--surface-primary);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-floating);
+  border: 1px solid var(--border-primary);
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+  overflow: hidden;
+}
+
+/* Size variants */
+.ui-modal__content.ui-modal--small {
+  width: 400px;
+  max-width: 100%;
+}
+
+.ui-modal__content.ui-modal--medium {
+  width: 600px;
+  max-width: 100%;
+}
+
+.ui-modal__content.ui-modal--large {
+  width: 800px;
+  max-width: 100%;
+}
+
+.ui-modal__content.ui-modal--extra-large {
+  width: 1000px;
+  max-width: 100%;
+}
+
+.ui-modal__content.ui-modal--full {
+  width: 95vw;
+  height: 95vh;
+  max-width: none;
+  max-height: none;
+}
+
+/* Header */
+.ui-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+  border-bottom: 1px solid var(--border-primary);
+  flex-shrink: 0;
+}
+
+.ui-modal__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.ui-modal__close {
+  margin-left: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+/* Body */
+.ui-modal__body {
+  padding: var(--spacing-lg);
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Footer */
+.ui-modal__footer {
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+  border-top: 1px solid var(--border-primary);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+/* Animaciones */
+@keyframes ui-modal-overlay-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ui-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .ui-modal__overlay {
+    padding: var(--spacing-sm);
+    align-items: flex-end;
+  }
+  
+  .ui-modal {
+    max-height: 95vh;
+    max-width: 100%;
+  }
+  
+  .ui-modal__content {
+    border-radius: var(--radius-large) var(--radius-large) 0 0;
+    max-height: inherit;
+  }
+  
+  .ui-modal__content.ui-modal--small,
+  .ui-modal__content.ui-modal--medium,
+  .ui-modal__content.ui-modal--large,
+  .ui-modal__content.ui-modal--extra-large {
+    width: 100%;
+  }
+  
+  .ui-modal__content.ui-modal--full {
+    width: 100%;
+    height: 95vh;
+    border-radius: var(--radius-medium) var(--radius-medium) 0 0;
+  }
+  
+  .ui-modal__header {
+    padding: var(--spacing-md);
+  }
+  
+  .ui-modal__body {
+    padding: var(--spacing-md);
+  }
+  
+  .ui-modal__footer {
+    padding: var(--spacing-md);
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  
+  .ui-modal__footer .ui-button {
+    width: 100%;
+  }
+  
+  /* Animación móvil */
+  @keyframes ui-modal-enter {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .ui-modal__overlay,
+  .ui-modal {
+    animation: none;
+  }
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .ui-modal__overlay {
+  backdrop-filter: blur(4px) brightness(0.3);
+}
+
+/* Focus management */
+.ui-modal:focus {
+  outline: none;
+}
+
+/* Scrollbar styling for modal body */
+.ui-modal__body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ui-modal__body::-webkit-scrollbar-track {
+  background: var(--surface-secondary);
+  border-radius: var(--radius-small);
+}
+
+.ui-modal__body::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: var(--radius-small);
+}
+
+.ui-modal__body::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}

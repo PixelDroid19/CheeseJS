@@ -1,0 +1,334 @@
+/* FloatingToolbar Component Styles */
+.floating-toolbar {
+  position: fixed;
+  z-index: var(--z-floating-toolbar);
+  user-select: none;
+  transition: all var(--transition-normal);
+  
+  /* Glassmorphism effect */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.floating-toolbar__container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-pill);
+  padding: var(--spacing-sm);
+  box-shadow: var(--shadow-floating);
+  min-height: 48px;
+  position: relative;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .floating-toolbar__container {
+  background: rgba(30, 30, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Position variants */
+.floating-toolbar--bottom-center {
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.floating-toolbar--bottom-left {
+  bottom: 24px;
+  left: 24px;
+}
+
+.floating-toolbar--bottom-right {
+  bottom: 24px;
+  right: 24px;
+}
+
+.floating-toolbar--top-center {
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.floating-toolbar--top-left {
+  top: 24px;
+  left: 24px;
+}
+
+.floating-toolbar--top-right {
+  top: 24px;
+  right: 24px;
+}
+
+/* Custom position (when dragged) */
+.floating-toolbar--custom-position {
+  position: fixed !important;
+  transform: none !important;
+}
+
+/* Drag handle */
+.floating-toolbar__drag-handle {
+  cursor: grab;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-small);
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floating-toolbar__drag-handle:hover {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.floating-toolbar--dragging .floating-toolbar__drag-handle {
+  cursor: grabbing;
+  background-color: var(--surface-secondary);
+}
+
+/* Primary actions */
+.floating-toolbar__primary {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* Separator */
+.floating-toolbar__separator {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border-primary);
+  margin: 0 var(--spacing-xs);
+  opacity: 0.5;
+}
+
+/* Secondary actions */
+.floating-toolbar__secondary {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Dropdown menu */
+.floating-toolbar__dropdown {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  min-width: 200px;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadow-floating);
+  padding: var(--spacing-xs);
+  z-index: calc(var(--z-floating-toolbar) + 10);
+  
+  /* Animation */
+  animation: dropdown-enter var(--transition-fast) ease-out;
+  transform-origin: bottom right;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: none;
+  background: none;
+  border-radius: var(--radius-small);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 14px;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background-color: var(--surface-secondary);
+}
+
+.dropdown-item__label {
+  flex: 1;
+}
+
+.dropdown-item__shortcut {
+  font-size: 12px;
+  color: var(--text-muted);
+  background-color: var(--surface-tertiary);
+  padding: 2px 6px;
+  border-radius: var(--radius-small);
+  font-family: monospace;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--border-primary);
+  margin: var(--spacing-xs) 0;
+}
+
+/* Toggle button */
+.floating-toolbar__toggle {
+  display: flex;
+  align-items: center;
+  margin-left: var(--spacing-xs);
+}
+
+/* Collapsed state */
+.floating-toolbar--collapsed .floating-toolbar__primary,
+.floating-toolbar--collapsed .floating-toolbar__separator,
+.floating-toolbar--collapsed .floating-toolbar__secondary {
+  display: none;
+}
+
+.floating-toolbar--collapsed .floating-toolbar__container {
+  padding: var(--spacing-xs);
+}
+
+/* Toolbar actions */
+.toolbar-action {
+  flex-shrink: 0;
+}
+
+/* Tooltip styling */
+.toolbar-tooltip {
+  text-align: center;
+}
+
+.toolbar-tooltip__shortcut {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.8;
+  font-family: monospace;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: var(--radius-small);
+}
+
+/* Animations */
+@keyframes dropdown-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Dragging state */
+.floating-toolbar--dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+.floating-toolbar--dragging .floating-toolbar__container {
+  box-shadow: var(--shadow-floating), 0 0 0 2px var(--color-primary-light);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .floating-toolbar {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    transform: none !important;
+    width: calc(100% - 24px);
+  }
+  
+  .floating-toolbar--bottom-center,
+  .floating-toolbar--bottom-left,
+  .floating-toolbar--bottom-right {
+    left: 12px;
+    right: 12px;
+    transform: none;
+    width: calc(100% - 24px);
+  }
+  
+  .floating-toolbar__container {
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  .floating-toolbar__primary {
+    gap: var(--spacing-sm);
+  }
+  
+  .floating-toolbar__drag-handle {
+    display: none; /* Hide drag handle on mobile */
+  }
+  
+  .floating-toolbar__dropdown {
+    right: auto;
+    left: 0;
+    width: 100%;
+    min-width: auto;
+  }
+  
+  /* Make buttons touch-friendly */
+  .toolbar-action {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .floating-toolbar__separator {
+    display: none;
+  }
+  
+  .floating-toolbar__primary {
+    gap: 4px;
+  }
+  
+  .floating-toolbar__container {
+    padding: 6px 12px;
+  }
+  
+  /* Stack dropdown items on very small screens */
+  .dropdown-item__shortcut {
+    display: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .floating-toolbar__container {
+    background: var(--surface-primary);
+    border: 2px solid var(--border-primary);
+    backdrop-filter: none;
+  }
+  
+  .floating-toolbar__separator {
+    opacity: 1;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .floating-toolbar,
+  .floating-toolbar__dropdown,
+  .dropdown-item,
+  .floating-toolbar__drag-handle {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Focus management */
+.floating-toolbar:focus-within {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-pill);
+}
+
+/* Print styles */
+@media print {
+  .floating-toolbar {
+    display: none;
+  }
+}

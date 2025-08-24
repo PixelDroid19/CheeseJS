@@ -3,10 +3,10 @@
 /* Main Editor Layout Container */
 .main-editor-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 4px 1fr;
   height: 100%;
   width: 100%;
-  gap: 4px;
+  gap: 0;
   overflow: hidden;
   background-color: var(--background-color);
   padding: 0;
@@ -39,6 +39,17 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+/* Resizer vertical entre editor y salida */
+.resizer.resizer-vertical {
+  width: 4px;
+  background-color: var(--border-color);
+  cursor: ew-resize;
+}
+
+.resizer.resizer-vertical:hover {
+  background-color: var(--border-focus);
 }
 
 /* Layout responsivo */

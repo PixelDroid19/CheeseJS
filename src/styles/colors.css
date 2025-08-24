@@ -1,0 +1,123 @@
+/**
+ * Sistema de Colores Reutilizable
+ * Variables CSS para mantener consistencia visual y compatibilidad con themes
+ */
+
+:root {
+  /* Colores Base */
+  --color-primary: #007acc;
+  --color-primary-hover: #0066a3;
+  --color-primary-active: #005580;
+  --color-primary-light: #e6f7ff;
+  
+  --color-secondary: #6c757d;
+  --color-secondary-hover: #5a6268;
+  --color-secondary-active: #545b62;
+  --color-secondary-light: #f8f9fa;
+  
+  --color-success: #28a745;
+  --color-success-hover: #218838;
+  --color-success-light: #d4edda;
+  
+  --color-warning: #ffc107;
+  --color-warning-hover: #e0a800;
+  --color-warning-light: #fff3cd;
+  
+  --color-danger: #dc3545;
+  --color-danger-hover: #c82333;
+  --color-danger-light: #f8d7da;
+  
+  --color-info: #17a2b8;
+  --color-info-hover: #138496;
+  --color-info-light: #d1ecf1;
+  
+  /* Colores de Superficie */
+  --surface-primary: var(--background-color, #ffffff);
+  --surface-secondary: var(--secondary-background-color, #f8f9fa);
+  --surface-tertiary: var(--tertiary-background-color, #e9ecef);
+  --surface-overlay: var(--overlay-background-color, rgba(0, 0, 0, 0.5));
+  
+  /* Colores de Texto */
+  --text-primary: var(--text-color, #212529);
+  --text-secondary: var(--muted-text-color, #6c757d);
+  --text-inverse: var(--inverse-text-color, #ffffff);
+  --text-muted: var(--muted-text-color, #6c757d);
+  
+  /* Colores de Borde */
+  --border-primary: var(--border-color, #dee2e6);
+  --border-secondary: var(--secondary-border-color, #e9ecef);
+  --border-focus: var(--focus-color, #007acc);
+  
+  /* Sombras */
+  --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --shadow-large: 0 8px 16px rgba(0, 0, 0, 0.15);
+  --shadow-floating: 0 12px 24px rgba(0, 0, 0, 0.2);
+  
+  /* Radiuses */
+  --radius-small: 4px;
+  --radius-medium: 8px;
+  --radius-large: 12px;
+  --radius-pill: 50px;
+  
+  /* Espaciado */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  
+  /* Transiciones */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow: 0.35s ease;
+  
+  /* Z-index layers */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-floating-toolbar: 1080;
+}
+
+/* Tema Oscuro - Sobrescribe variables cuando está activo */
+[data-theme="dark"] {
+  --color-primary-light: #1e3a5f;
+  --color-secondary-light: #2d3748;
+  --color-success-light: #1e4d2b;
+  --color-warning-light: #744210;
+  --color-danger-light: #5a1e1e;
+  --color-info-light: #1e3a42;
+}
+
+/* Utilidades de Color */
+.color-primary { color: var(--color-primary) !important; }
+.color-secondary { color: var(--color-secondary) !important; }
+.color-success { color: var(--color-success) !important; }
+.color-warning { color: var(--color-warning) !important; }
+.color-danger { color: var(--color-danger) !important; }
+.color-info { color: var(--color-info) !important; }
+
+.bg-primary { background-color: var(--color-primary) !important; }
+.bg-secondary { background-color: var(--color-secondary) !important; }
+.bg-success { background-color: var(--color-success) !important; }
+.bg-warning { background-color: var(--color-warning) !important; }
+.bg-danger { background-color: var(--color-danger) !important; }
+.bg-info { background-color: var(--color-info) !important; }
+
+.bg-surface-primary { background-color: var(--surface-primary) !important; }
+.bg-surface-secondary { background-color: var(--surface-secondary) !important; }
+.bg-surface-tertiary { background-color: var(--surface-tertiary) !important; }
+
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-inverse { color: var(--text-inverse) !important; }
+
+.border-primary { border-color: var(--border-primary) !important; }
+.border-secondary { border-color: var(--border-secondary) !important; }
+.border-focus { border-color: var(--border-focus) !important; }

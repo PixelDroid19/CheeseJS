@@ -1,246 +1,162 @@
-/* App Shell Styles */
+/* App Shell - Nueva arquitectura sin sidebar */
 .app-shell {
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background-color: var(--background-color);
-  color: var(--text-color);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
-/* Loading State */
+/* Header */
+.app-shell .header-bar {
+  flex-shrink: 0;
+  z-index: var(--z-sticky);
+}
+
+/* Main layout - sin sidebar */
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.app-main--no-sidebar {
+  /* Específico para layout sin sidebar */
+}
+
+/* Content area */
+.app-content {
+  flex: 1;
+  display: grid;
+  overflow: hidden;
+  position: relative;
+}
+
+.editor-container {
+  overflow: hidden;
+  position: relative;
+  background-color: var(--surface-primary);
+}
+
+/* Console */
+.app-console {
+  border-top: 1px solid var(--border-primary);
+  background-color: var(--surface-secondary);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Resize handles */
+.resize-handle {
+  background-color: var(--border-primary);
+  transition: background-color var(--transition-fast);
+  z-index: var(--z-sticky);
+}
+
+.resize-handle:hover {
+  background-color: var(--color-primary);
+}
+
+.resize-handle--horizontal {
+  height: 4px;
+  cursor: ns-resize;
+  width: 100%;
+}
+
+.resize-handle--vertical {
+  width: 4px;
+  cursor: ew-resize;
+  height: 100%;
+}
+
+/* Resize overlay */
+.resize-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  z-index: var(--z-modal-backdrop);
+  cursor: inherit;
+}
+
+/* Loading state */
 .app-shell-loading {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  width: 100vw;
+  background: linear-gradient(135deg, var(--color-primary-light), var(--surface-primary));
+  color: var(--text-primary);
 }
 
 .loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
   text-align: center;
-  animation: fadeInUp 0.6s ease-out;
+  max-width: 400px;
+  padding: var(--spacing-xl);
 }
 
 .cheese-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  animation: bounce 2s infinite;
+  font-size: 64px;
+  animation: bounce 2s ease-in-out infinite;
 }
 
 .loading-content h1 {
-  font-size: 2.5rem;
-  margin: 0 0 2rem 0;
-  font-weight: 300;
-  letter-spacing: 2px;
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-primary);
 }
 
 .loading-bar {
   width: 200px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-  margin: 0 auto 1rem;
+  background-color: var(--surface-tertiary);
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 
 .loading-progress {
   height: 100%;
-  background: white;
-  border-radius: 2px;
-  animation: loading 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-info));
+  border-radius: var(--radius-pill);
+  animation: loading-progress 2s ease-in-out infinite;
 }
 
 .loading-content p {
   margin: 0;
-  opacity: 0.8;
-  font-size: 0.9rem;
-}
-
-/* Main Layout */
-.app-main {
-  display: grid;
-  flex: 1;
-  height: 100%;
-  width: 100%;
-  min-height: 0;
-  overflow: hidden;
-  position: relative;
-  box-sizing: border-box;
-}
-
-/* Content Area */
-.content-area {
-  display: grid;
-  grid-template-rows: 1fr;
-  height: 100%;
-  width: 100%;
-  min-height: 0;
-  overflow: hidden;
-  background-color: var(--surface-color);
-  box-sizing: border-box;
-}
-
-.editor-container {
-  height: 100%;
-  width: 100%;
-  min-height: 0;
-  overflow: hidden;
-  background-color: var(--editor-background);
-  position: relative;
-  box-sizing: border-box;
-}
-
-.console-container {
-  background-color: var(--console-background);
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Console Placeholder */
-.console-placeholder {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.console-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background-color: var(--surface-variant);
-  border-bottom: 1px solid var(--border-color);
-  min-height: 36px;
-}
-
-.console-title {
-  font-size: 0.9rem;
-  font-weight: 500;
   color: var(--text-secondary);
-}
-
-.console-actions {
-  display: flex;
-  gap: 4px;
-}
-
-.btn-icon {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 3px;
-  font-size: 0.8rem;
-  transition: all 0.2s;
-}
-
-.btn-icon:hover {
-  background-color: var(--surface-color);
-  color: var(--text-color);
-}
-
-.console-content {
-  flex: 1;
-  padding: 12px;
-  overflow-y: auto;
-  font-family: Monaco, Menlo, 'Ubuntu Mono', monospace;
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
-.console-info {
-  color: var(--console-info);
-  margin: 0;
-}
-
-/* Resizers */
-.resizer {
-  background-color: var(--border-color);
-  position: relative;
-  z-index: 10;
-  transition: background-color 0.2s;
-}
-
-.resizer:hover {
-  background-color: var(--border-focus);
-}
-
-.resizer-vertical {
-  cursor: ew-resize;
-  width: 4px;
-}
-
-.resizer-horizontal {
-  cursor: ns-resize;
-  height: 4px;
-}
-
-.resizer:active,
-.resizer.resizing {
-  background-color: var(--primary-color);
-}
-
-/* Resize Overlay */
-.resize-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9999;
-  background: transparent;
-  cursor: inherit;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .app-main {
-    grid-template-columns: 1fr !important;
-  }
-  
-  .resizer-vertical {
-    display: none;
-  }
-}
-
-@media (max-height: 600px) {
-  .console-container {
-    min-height: 120px;
-  }
+  font-size: 14px;
 }
 
 /* Animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
   }
-  40% {
-    transform: translateY(-10px);
+  40%, 43% {
+    transform: translate3d(0, -20px, 0);
   }
-  60% {
-    transform: translateY(-5px);
+  70% {
+    transform: translate3d(0, -10px, 0);
+  }
+  90% {
+    transform: translate3d(0, -4px, 0);
   }
 }
 
-@keyframes loading {
+@keyframes loading-progress {
   0% {
     transform: translateX(-100%);
   }
@@ -252,69 +168,46 @@
   }
 }
 
-/* Theme Transitions */
-.app-shell {
-  transition: background-color 0.3s, color 0.3s;
+/* Responsive design */
+@media (max-width: 768px) {
+  .app-shell {
+    /* Ajustes para móvil si es necesario */
+  }
+  
+  .app-console {
+    min-height: 200px;
+  }
+  
+  .resize-handle--horizontal {
+    height: 6px; /* Más grueso para touch */
+  }
 }
 
-.content-area,
-.editor-container,
-.console-container,
-.console-header {
-  transition: background-color 0.3s, border-color 0.3s;
-}
-
-/* Focus Management */
-.app-shell:focus-within .resizer {
-  opacity: 0.7;
+/* Dark theme adjustments */
+[data-theme="dark"] .app-shell {
+  /* Ajustes específicos para tema oscuro si es necesario */
 }
 
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
-  .app-shell,
-  .content-area,
-  .editor-container,
-  .console-container,
-  .console-header,
-  .btn-icon {
-    transition: none;
-  }
-  
-  .loading-content,
   .cheese-icon,
   .loading-progress {
     animation: none;
   }
 }
 
-/* High Contrast Mode */
-@media (prefers-contrast: high) {
-  .resizer {
-    background-color: var(--text-color);
-  }
-  
-  .console-header {
-    border-bottom: 2px solid var(--text-color);
-  }
-}
-
-/* Dark Theme Specific Adjustments */
-.app-shell.theme-dark .resizer {
-  background-color: #3e3e42;
-}
-
-.app-shell.theme-dark .resizer:hover {
-  background-color: #007acc;
-}
-
-/* Print Styles */
+/* Print styles */
 @media print {
   .app-shell {
     height: auto;
+    overflow: visible;
   }
   
-  .console-container,
-  .resizer {
+  .app-console {
+    display: none;
+  }
+  
+  .resize-handle {
     display: none;
   }
 }

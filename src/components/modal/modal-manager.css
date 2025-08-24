@@ -1,0 +1,68 @@
+/* ModalManager Component Styles */
+.modal-manager__modal {
+  /* Base styles for all managed modals */
+}
+
+.modal-manager__modal--settings {
+  /* Specific styles for settings modal */
+}
+
+.modal-manager__modal--help {
+  /* Specific styles for help modal */
+}
+
+.modal-manager__modal--examples {
+  /* Specific styles for examples modal */
+}
+
+.modal-manager__modal--packages {
+  /* Specific styles for packages modal */
+}
+
+.modal-manager__modal--confirm {
+  /* Specific styles for confirm modal */
+}
+
+/* Error state for unknown modal types */
+.modal-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.modal-error h3 {
+  margin: 0;
+  color: var(--color-warning);
+  font-size: 18px;
+}
+
+.modal-error p {
+  margin: 0;
+  color: var(--text-secondary);
+  max-width: 300px;
+}
+
+/* Stacked modals support */
+.modal-manager__modal:nth-child(n+2) {
+  /* Slightly different backdrop for stacked modals */
+}
+
+.modal-manager__modal:nth-child(n+2) .ui-modal__overlay {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Animation overrides for modal manager */
+.modal-manager__modal .ui-modal {
+  animation-delay: 50ms;
+}
+
+.modal-manager__modal:nth-child(2) .ui-modal {
+  animation-delay: 100ms;
+}
+
+.modal-manager__modal:nth-child(3) .ui-modal {
+  animation-delay: 150ms;
+}
