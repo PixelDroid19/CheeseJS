@@ -15,17 +15,15 @@
   z-index: var(--z-floating-toolbar);
   user-select: none;
   transition: all var(--transition-normal);
-  
-  /* Glassmorphism effect */
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  will-change: transform, left, top;
 }
 
 .floating-toolbar__container {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  background: var(--surface-primary, rgba(255, 255, 255, 0.85));
+  /* Fondo moved to ::before to avoid expanding with dropdown */
+  background: transparent;
   border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.3));
   border-radius: var(--radius-pill);
   padding: var(--spacing-sm);
@@ -33,12 +31,25 @@
   min-height: 48px;
   position: relative;
   transition: all var(--transition-normal);
+  isolation: isolate;
 }
 
 /* Dark theme adjustments - Mejorada integración */
 [data-theme="dark"] .floating-toolbar__container {
-  background: var(--surface-primary, rgba(30, 30, 30, 0.85));
-  border-color: var(--border-primary, rgba(255, 255, 255, 0.1));
+  border-color: var(--border-primary, rgba(255, 255, 255, 0.12));
+}
+
+/* Confined blur/background */
+.floating-toolbar__container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--surface-primary) 88%, transparent);
+  border-radius: inherit;
+  z-index: -1;
+  pointer-events: none;
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
 }
 
 /* Asegurar compatibilidad con diferentes temas */
@@ -297,7 +308,12 @@
 }
 
 .floating-toolbar--dragging .floating-toolbar__container {
-  box-shadow: var(--shadow-floating), 0 0 0 2px var(--color-primary-light);
+  box-shadow: var(--shadow-floating), 0 0 0 2px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+.floating-toolbar--dragging .floating-toolbar__container::before {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* Responsive design - Mejorado para ocupación de espacio óptima */
@@ -471,11 +487,10 @@
   }
 }
 
-/* Focus management */
-.floating-toolbar:focus-within {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 4px;
-  border-radius: var(--radius-pill);
+/* Focus management: evitar anillo grande alrededor de todo el toolbar cuando
+   se abre el menú; los botones ya tienen outline accesible por sí mismos */
+.floating-toolbar__container:focus-within {
+  box-shadow: var(--shadow-floating);
 }
 
 /* Print styles */

@@ -9,10 +9,23 @@ export const PanelTabManager = ({
   panels = [],
   activeTab,
   panelStates = new Map(),
-  onTabSwitch,
-  onTabAction
+  onTabClick, // Mantener compatibilidad con onTabClick
+  onTabSwitch, // Y también soportar onTabSwitch 
+  onTabAction,
+  t = (key) => key // Función de traducción por defecto
 }) => {
   
+  /**
+   * Manejar cambio de pestaña con compatibilidad
+   */
+  const handleTabSwitch = (panelId) => {
+    if (onTabSwitch) {
+      onTabSwitch(panelId);
+    } else if (onTabClick) {
+      onTabClick(panelId);
+    }
+  };
+
   /**
    * Obtener conteo de un panel
    */
@@ -34,15 +47,15 @@ export const PanelTabManager = ({
    */
   const renderPanelActions = () => {
     const activePanel = panels.find(p => p.id === activeTab);
-    if (!activePanel) return null;
+    if (!activePanel || !activePanel.name) return null;
 
     return (
       <div className="panel-actions">
         {/* Acción de limpiar */}
         <button 
           className="action-btn"
-          onClick={() => onTabAction('clear', activeTab)}
-          title={`Limpiar ${activePanel.name.toLowerCase()}`}
+          onClick={() => onTabAction && onTabAction(activeTab, 'clear')}
+          title={t ? t('clear_panel', { panel: activePanel.name.toLowerCase() }) : `Limpiar ${activePanel.name.toLowerCase()}`}
         >
           🗑️
         </button>
@@ -51,8 +64,8 @@ export const PanelTabManager = ({
         {activePanel.id === 'terminal' && (
           <button 
             className="action-btn"
-            onClick={() => onTabAction('reset', activeTab)}
-            title="Reinicializar terminal"
+            onClick={() => onTabAction && onTabAction(activeTab, 'reset')}
+            title={t ? t('reset_terminal') : "Reinicializar terminal"}
           >
             🔄
           </button>
@@ -61,8 +74,8 @@ export const PanelTabManager = ({
         {activePanel.id === 'output' && (
           <button 
             className="action-btn"
-            onClick={() => onTabAction('test', activeTab)}
-            title="Generar logs de prueba"
+            onClick={() => onTabAction && onTabAction(activeTab, 'test')}
+            title={t ? t('generate_test_logs') : "Generar logs de prueba"}
           >
             🧪
           </button>
@@ -71,8 +84,8 @@ export const PanelTabManager = ({
         {/* Acción de configuración */}
         <button 
           className="action-btn"
-          onClick={() => onTabAction('settings', activeTab)}
-          title={`Configurar ${activePanel.name.toLowerCase()}`}
+          onClick={() => onTabAction && onTabAction(activeTab, 'settings')}
+          title={t ? t('configure_panel', { panel: activePanel.name.toLowerCase() }) : `Configurar ${activePanel.name.toLowerCase()}`}
         >
           ⚙️
         </button>
@@ -94,7 +107,7 @@ export const PanelTabManager = ({
                 ${panel.disabled ? 'disabled' : ''}
                 ${hasNotifications(panel.id) ? 'has-notifications' : ''}
               `}
-              onClick={() => !panel.disabled && onTabSwitch(panel.id)}
+              onClick={() => !panel.disabled && handleTabSwitch(panel.id)}
               disabled={panel.disabled}
               title={panel.disabled ? 'Funcionalidad próximamente' : panel.name}
               data-panel-id={panel.id}

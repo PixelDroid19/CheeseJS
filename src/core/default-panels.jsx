@@ -1,38 +1,34 @@
 import { pluginRegistry } from './plugin-registry.js';
 
-// Importación dinámica de paneles para evitar dependencias circulares
-let OutputPanel, TerminalPanel, ProblemsPanel, DebugPanel, PortsPanel;
-
-const loadPanels = async () => {
-  try {
-    // Importación dinámica de paneles
-    const modules = await Promise.all([
-      import('../components/dev-panel/panels/output-panel.jsx'),
-      import('../components/dev-panel/panels/terminal-panel.jsx'),
-      import('../components/dev-panel/panels/problems-panel.jsx'),
-      import('../components/dev-panel/panels/debug-panel.jsx'),
-      import('../components/dev-panel/panels/ports-panel.jsx')
-    ]);
-
-    OutputPanel = modules[0].OutputPanel;
-    TerminalPanel = modules[1].TerminalPanel;
-    ProblemsPanel = modules[2].ProblemsPanel;
-    DebugPanel = modules[3].DebugPanel;
-    PortsPanel = modules[4].PortsPanel;
-
-  } catch (error) {
-    console.warn('⚠️ Algunos paneles no se pudieron cargar:', error);
-  }
-};
-
 /**
  * Registrar paneles por defecto en el sistema de plugins
  */
 export const registerDefaultPanels = async () => {
   console.log('🔌 Registrando paneles por defecto...');
 
-  // Cargar paneles
-  await loadPanels();
+  // Importación dinámica de paneles
+  const modules = await Promise.all([
+    import('../components/dev-panel/panels/output-panel.jsx'),
+    import('../components/dev-panel/panels/terminal-panel.jsx'),
+    import('../components/dev-panel/panels/problems-panel.jsx'),
+    import('../components/dev-panel/panels/debug-panel.jsx'),
+    import('../components/dev-panel/panels/ports-panel.jsx')
+  ]);
+
+  // Extraer componentes de los módulos importados
+  const OutputPanel = modules[0].OutputPanel || modules[0].default;
+  const TerminalPanel = modules[1].TerminalPanel || modules[1].default;
+  const ProblemsPanel = modules[2].ProblemsPanel || modules[2].default;
+  const DebugPanel = modules[3].DebugPanel || modules[3].default;
+  const PortsPanel = modules[4].PortsPanel || modules[4].default;
+
+  console.log('🔍 Componentes cargados:', {
+    OutputPanel: typeof OutputPanel,
+    TerminalPanel: typeof TerminalPanel,
+    ProblemsPanel: typeof ProblemsPanel,
+    DebugPanel: typeof DebugPanel,
+    PortsPanel: typeof PortsPanel
+  });
 
   const defaultPanels = [
     {
@@ -183,12 +179,16 @@ export const registerDefaultPanels = async () => {
   const registeredPanels = [];
   for (const panelConfig of defaultPanels) {
     try {
-      if (panelConfig.component) {
+      // Verificar que el panel tiene un componente válido
+      if (panelConfig.component && typeof panelConfig.component === 'function') {
         const plugin = pluginRegistry.registerPlugin(panelConfig);
         registeredPanels.push(plugin);
         console.log(`✅ Panel registrado: ${panelConfig.id}`);
       } else {
-        console.warn(`⚠️ Panel ${panelConfig.id} no tiene componente, omitiendo...`);
+        console.warn(`⚠️ Panel ${panelConfig.id} no tiene componente válido, omitiendo...`, {
+          component: typeof panelConfig.component,
+          value: panelConfig.component
+        });
       }
     } catch (error) {
       console.error(`❌ Error registrando panel ${panelConfig.id}:`, error);
@@ -198,58 +198,3 @@ export const registerDefaultPanels = async () => {
   console.log(`🔌 ${registeredPanels.length} paneles registrados exitosamente`);
   return registeredPanels;
 };
-
-/**
- * Crear un panel personalizado
- */
-export const createCustomPanel = (config) => {
-  if (!config.id || !config.name || !config.component) {
-    throw new Error('Panel personalizado debe tener id, name y component');
-  }
-
-  const panelConfig = {
-    type: 'panel',
-    disabled: false,
-    showCount: false,
-    priority: 0,
-    description: 'Panel personalizado',
-    version: '1.0.0',
-    actions: [],
-    ...config
-  };
-
-  return pluginRegistry.registerPlugin(panelConfig);
-};
-
-/**
- * Ejemplo de panel personalizado simple
- */
-export const createExamplePanel = () => {
-  const ExampleComponent = () => {
-    return (
-      <div style={{ padding: '16px' }}>
-        <h3>Panel de Ejemplo</h3>
-        <p>Este es un panel personalizado creado dinámicamente.</p>
-      </div>
-    );
-  };
-
-  return createCustomPanel({
-    id: 'example',
-    name: 'EXAMPLE',
-    icon: '🎯',
-    component: ExampleComponent,
-    priority: 10,
-    description: 'Panel de ejemplo para demostrar extensibilidad',
-    actions: [
-      {
-        id: 'hello',
-        name: 'Saludar',
-        icon: '👋',
-        handler: () => alert('¡Hola desde el panel de ejemplo!')
-      }
-    ]
-  });
-};
-
-export default { registerDefaultPanels, createCustomPanel, createExamplePanel };

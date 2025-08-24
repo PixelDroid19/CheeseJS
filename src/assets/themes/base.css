@@ -202,10 +202,15 @@ body {
   background: var(--scrollbar-thumb-hover);
 }
 
-/* Focus ring global */
+/* Focus ring global: dejar outlines a los componentes, no al contenedor del toolbar */
 *:focus-visible {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
+}
+
+/* Evitar que el contenedor del floating-toolbar muestre anillo cuando un hijo tiene foco */
+.floating-toolbar:focus-within {
+  outline: none;
 }
 
 /* Theme transitions */

@@ -71,6 +71,7 @@ class PluginRegistry {
 
     const panelConfig = {
       id,
+      type: 'panel',
       name: plugin.name,
       icon,
       component,

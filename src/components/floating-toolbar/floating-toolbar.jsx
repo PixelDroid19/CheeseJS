@@ -160,26 +160,41 @@ export const FloatingToolbar = ({
 
   // Funcionalidad de drag & drop
   const handleMouseDown = (e) => {
-    if (e.target.closest('.toolbar-action')) return;
+    // Limitar arrastre solo al área del drag-handle
+    if (!e.currentTarget.classList.contains('floating-toolbar__drag-handle')) return;
     
+    setActiveMenu(null);
     setIsDragging(true);
+
+    const rect = toolbarRef.current.getBoundingClientRect();
     dragStartRef.current = {
       x: e.clientX,
       y: e.clientY,
-      toolbarX: toolbarRef.current.offsetLeft,
-      toolbarY: toolbarRef.current.offsetTop
+      toolbarX: rect.left,
+      toolbarY: rect.top
     };
 
-    const handleMouseMove = (e) => {
+    let rafId = null;
+
+    const handleMouseMove = (moveEvent) => {
       if (!dragStartRef.current) return;
-      
-      const deltaX = e.clientX - dragStartRef.current.x;
-      const deltaY = e.clientY - dragStartRef.current.y;
-      
-      setDragPosition({
-        x: dragStartRef.current.toolbarX + deltaX,
-        y: dragStartRef.current.toolbarY + deltaY
-      });
+
+      const doUpdate = () => {
+        const deltaX = moveEvent.clientX - dragStartRef.current.x;
+        const deltaY = moveEvent.clientY - dragStartRef.current.y;
+
+        const el = toolbarRef.current;
+        const margin = 12;
+        const maxX = Math.max(margin, window.innerWidth - el.offsetWidth - margin);
+        const maxY = Math.max(margin, window.innerHeight - el.offsetHeight - margin);
+        const nextX = Math.min(Math.max(dragStartRef.current.toolbarX + deltaX, margin), maxX);
+        const nextY = Math.min(Math.max(dragStartRef.current.toolbarY + deltaY, margin), maxY);
+
+        setDragPosition({ x: nextX, y: nextY });
+      };
+
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(doUpdate);
     };
 
     const handleMouseUp = () => {
@@ -187,6 +202,7 @@ export const FloatingToolbar = ({
       dragStartRef.current = null;
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      if (rafId) cancelAnimationFrame(rafId);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -219,7 +235,7 @@ export const FloatingToolbar = ({
       id: 'new',
       icon: 'file',
       label: t('toolbar.newFile'),
-      variant: 'primary',
+      variant: 'ghost',
       onClick: handleNewFile,
       shortcut: t('toolbar.newFileShortcut')
     },
@@ -227,7 +243,7 @@ export const FloatingToolbar = ({
       id: 'save',
       icon: 'save',
       label: t('toolbar.save'),
-      variant: 'secondary',
+      variant: 'ghost',
       onClick: handleSaveFile,
       shortcut: t('toolbar.saveFileShortcut')
     },
@@ -235,7 +251,7 @@ export const FloatingToolbar = ({
       id: 'format',
       icon: 'format',
       label: t('toolbar.format'),
-      variant: 'secondary',
+      variant: 'ghost',
       onClick: handleFormatCode,
       shortcut: t('toolbar.formatCodeShortcut')
     }
@@ -311,11 +327,10 @@ export const FloatingToolbar = ({
       ref={toolbarRef}
       className={toolbarClasses}
       style={toolbarStyle}
-      onMouseDown={handleMouseDown}
     >
       <div className="floating-toolbar__container">
         {/* Drag Handle */}
-        <div className="floating-toolbar__drag-handle">
+        <div className="floating-toolbar__drag-handle" onMouseDown={handleMouseDown}>
           <Icon name="menu" size="small" strokeWidth={1.5} />
         </div>
 

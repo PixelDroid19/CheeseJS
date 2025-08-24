@@ -48,9 +48,69 @@
 }
 
 .loading-content p {
-  margin: 0;
+  margin: 0 0 0.5rem 0;
   font-size: 0.9rem;
   color: var(--text-secondary);
+}
+
+.loading-content small {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Error State */
+.dev-panel-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: var(--surface-color);
+  color: var(--text-color);
+}
+
+.error-content {
+  text-align: center;
+  padding: 2rem;
+  max-width: 400px;
+}
+
+.error-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: block;
+  color: var(--error-color, #ef4444);
+}
+
+.error-content p {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.error-content small {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  opacity: 0.8;
+  word-break: break-word;
+}
+
+/* Empty State */
+.dev-panel-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: var(--surface-color);
+  color: var(--text-muted);
+}
+
+.dev-panel-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+  text-align: center;
+  opacity: 0.7;
 }
 
 /* Panel Content */

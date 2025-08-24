@@ -25,30 +25,6 @@ export const TerminalPanel = ({ panelId, state, updateState, isActive }) => {
     }
   }, [isActive]);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   return (
     <div className="terminal-panel">
       {/* Status bar */}

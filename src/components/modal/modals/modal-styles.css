@@ -202,7 +202,8 @@
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-xl);
   padding: var(--spacing-lg);
-  background: linear-gradient(135deg, var(--color-primary-light), var(--surface-secondary));
+  /* Evitar blancos chillones en dark */
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary-light) 60%, transparent), var(--surface-secondary));
   border-radius: var(--radius-medium);
 }
 
@@ -346,7 +347,7 @@
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-xl);
   padding: var(--spacing-lg);
-  background: linear-gradient(135deg, var(--color-info-light), var(--surface-secondary));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-info-light) 60%, transparent), var(--surface-secondary));
   border-radius: var(--radius-medium);
 }
 
@@ -391,7 +392,7 @@
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-xl);
   padding: var(--spacing-lg);
-  background: linear-gradient(135deg, var(--color-success-light), var(--surface-secondary));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-success-light) 60%, transparent), var(--surface-secondary));
   border-radius: var(--radius-medium);
 }
 

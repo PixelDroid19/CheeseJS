@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { ThemeProvider } from './theme-provider.jsx';
 import { HeaderBar } from './header-bar.jsx';
 import { DevPanel } from '../dev-panel/dev-panel.jsx';
 import { FloatingToolbar } from '../floating-toolbar/floating-toolbar.jsx';
 import { ModalManager } from '../modal/modal-manager.jsx';
-import { useTheme } from './theme-provider.jsx';
-import { configService } from '../../services/config-service.js';
-import { eventBus } from '../../utils/event-bus.js';
+import { useTheme } from '../../hooks/use-theme.js';
+import { useAppState } from '../../hooks/use-app-state.js';
+import { useUI } from '../../hooks/use-ui.js';
 import './app-shell.css';
 
 // Importar estilos globales
@@ -15,123 +15,34 @@ import '../modal/modals/modal-styles.css';
 
 /**
  * App Shell - Contenedor principal de la aplicación
- * Maneja el layout principal y la estructura de paneles
+ * Refactorizado para usar Zustand stores, eliminando prop drilling y EventBus
  */
 const AppShellContent = ({ children }) => {
-  const { currentTheme, isDarkTheme } = useTheme();
-  const [showConsole, setShowConsole] = useState(true);
-  const [consoleHeight, setConsoleHeight] = useState(300);
-  const [isResizing, setIsResizing] = useState(false);
-  const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const { currentTheme, isDark } = useTheme();
+  const {
+    isInitialized,
+    isInitializing,
+    initializationProgress,
+    initializationStep,
+    initialize
+  } = useAppState();
+  
+  const {
+    layout,
+    loading
+  } = useUI();
 
+  // Inicializar la aplicación al montar el componente
   useEffect(() => {
-    // Inicializar configuración
-    const initializeLayout = async () => {
-      try {
-        await configService.initialize();
-        
-        // Cargar configuración de layout
-        setShowConsole(configService.get('layout.showConsole', true));
-        setConsoleHeight(configService.get('layout.consoleHeight', 300));
-        setToolbarCollapsed(configService.get('layout.toolbarCollapsed', false));
-        
-        setIsInitialized(true);
-        console.log('🏗️ App Shell inicializado - Nueva arquitectura sin sidebar');
-      } catch (error) {
-        console.error('❌ Error al inicializar App Shell:', error);
-        setIsInitialized(true);
-      }
-    };
+    if (!isInitialized && !isInitializing) {
+      initialize();
+    }
+  }, [isInitialized, isInitializing, initialize]);
 
-    initializeLayout();
-
-    // Suscribirse a eventos de configuración
-    const unsubscribeConfigChanged = eventBus.subscribe('config:changed', (data) => {
-      const { key, newValue } = data;
-      
-      switch (key) {
-        case 'layout.showConsole':
-          setShowConsole(newValue);
-          break;
-        case 'layout.consoleHeight':
-          setConsoleHeight(newValue);
-          break;
-        case 'layout.toolbarCollapsed':
-          setToolbarCollapsed(newValue);
-          break;
-      }
-    });
-
-    // Suscribirse a eventos del toolbar flotante
-    const unsubscribeConsoleToggle = eventBus.subscribe('console:toggle-requested', () => {
-      toggleConsole();
-    });
-
-    return () => {
-      unsubscribeConfigChanged();
-      unsubscribeConsoleToggle();
-    };
-  }, []);
-
-  /**
-   * Alternar visibilidad de la consola
-   */
-  const toggleConsole = () => {
-    const newShowConsole = !showConsole;
-    setShowConsole(newShowConsole);
-    configService.set('layout.showConsole', newShowConsole);
-    
-    eventBus.emit('layout:console-toggled', { visible: newShowConsole });
-  };
-
-  /**
-   * Toggle del toolbar flotante
-   */
-  const toggleToolbar = () => {
-    const newCollapsed = !toolbarCollapsed;
-    setToolbarCollapsed(newCollapsed);
-    configService.set('layout.toolbarCollapsed', newCollapsed);
-  };
-
-  /**
-   * Iniciar redimensionamiento de la consola
-   */
-  const startResize = (event) => {
-    event.preventDefault();
-    setIsResizing(true);
-    
-    document.addEventListener('mousemove', handleResize);
-    document.addEventListener('mouseup', stopResize);
-    document.body.style.cursor = 'ns-resize';
-    document.body.style.userSelect = 'none';
-  };
-
-  /**
-   * Manejar redimensionamiento de la consola
-   */
-  const handleResize = (event) => {
-    if (!isResizing) return;
-    const newHeight = Math.max(150, Math.min(400, window.innerHeight - event.clientY));
-    setConsoleHeight(newHeight);
-  };
-
-  /**
-   * Detener redimensionamiento
-   */
-  const stopResize = () => {
-    if (!isResizing) return;
-    
-    setIsResizing(false);
-    
-    document.removeEventListener('mousemove', handleResize);
-    document.removeEventListener('mouseup', stopResize);
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-    
-    // Guardar nueva altura
-    configService.set('layout.consoleHeight', consoleHeight);
-  };
+  // Configuración de layout desde el estado global
+  const showConsole = layout.isConsoleVisible;
+  const consoleHeight = layout.consoleHeight;
+  const isResizing = layout.isResizing;
 
   /**
    * Manejar atajos de teclado
@@ -141,14 +52,15 @@ const AppShellContent = ({ children }) => {
       // Ctrl/Cmd + ` - Toggle Console
       if ((event.ctrlKey || event.metaKey) && event.key === '`') {
         event.preventDefault();
-        toggleConsole();
+        layout.toggleConsole();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showConsole]);
+  }, [layout]);
 
+  // Mostrar pantalla de carga durante la inicialización
   if (!isInitialized) {
     return (
       <div className="app-shell-loading">
@@ -156,21 +68,24 @@ const AppShellContent = ({ children }) => {
           <div className="cheese-icon">🧀</div>
           <h1>CheeseJS</h1>
           <div className="loading-bar">
-            <div className="loading-progress"></div>
+            <div 
+              className="loading-progress"
+              style={{ width: `${initializationProgress}%` }}
+            />
           </div>
-          <p>Inicializando aplicación...</p>
+          <p>{initializationStep || 'Inicializando aplicación...'}</p>
+          {initializationProgress > 0 && (
+            <span className="loading-percent">{Math.round(initializationProgress)}%</span>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`app-shell theme-${currentTheme} ${isDarkTheme() ? 'dark' : 'light'}`}>
+    <div className={`app-shell theme-${currentTheme} ${isDark ? 'dark' : 'light'}`}>
       {/* Header Bar Simplificado */}
-      <HeaderBar 
-        onToggleConsole={toggleConsole}
-        showConsole={showConsole}
-      />
+      <HeaderBar />
       
       {/* Main Layout Container - Sin Sidebar */}
       <div className="app-main app-main--no-sidebar">
@@ -186,8 +101,10 @@ const AppShellContent = ({ children }) => {
           {/* Console Resize Handle */}
           {showConsole && (
             <div 
-              className="resize-handle resize-handle--horizontal"
-              onMouseDown={startResize}
+              className={`resize-handle resize-handle--horizontal ${
+                isResizing ? 'resize-handle--active' : ''
+              }`}
+              onMouseDown={layout.startResize}
             />
           )}
           
@@ -202,19 +119,20 @@ const AppShellContent = ({ children }) => {
           )}
         </div>
       </div>
-      
+
       {/* Floating Toolbar */}
-      <FloatingToolbar 
-        position="bottom-center"
-        isCollapsed={toolbarCollapsed}
-        onToggle={toggleToolbar}
-      />
+      <FloatingToolbar />
       
       {/* Modal Manager */}
       <ModalManager />
       
-      {/* Background overlay cuando se está redimensionando */}
-      {isResizing && <div className="resize-overlay" />}
+      {/* Loading Overlay Global */}
+      {loading.global && (
+        <div className="app-loading-overlay">
+          <div className="loading-spinner" />
+          <p>Cargando...</p>
+        </div>
+      )}
     </div>
   );
 };

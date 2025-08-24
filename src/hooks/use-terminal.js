@@ -466,6 +466,24 @@ export const useTerminal = (options = {}) => {
         await core.initialize();
       }
       
+      // Si el core ya está listo, sincronizar estado de terminal inmediatamente
+      try {
+        const components = core.getComponents?.();
+        const service = components?.webContainerService;
+        const terminalIsReady = service?.isTerminalServiceReady?.();
+        if (terminalIsReady) {
+          setTerminalReady(true);
+          terminalReadyRef.current = true;
+          setIsConnected(true);
+          if (xtermRef.current) {
+            xtermRef.current.writeln('\x1b[32m✅ Terminal listo para usar\x1b[0m');
+            xtermRef.current.write('\x1b[32m$\x1b[0m ');
+          }
+        }
+      } catch (syncError) {
+        console.warn('⚠️ No se pudo sincronizar estado inicial de terminal:', syncError);
+      }
+      
     } catch (error) {
       console.error('❌ Error inicializando CheeseJS Core en terminal:', error);
       if (xtermRef.current) {
@@ -486,6 +504,8 @@ export const useTerminal = (options = {}) => {
 
     // Event listeners
     const unsubscribeWebContainerReady = eventBus.subscribe('cheesejs:webcontainer-ready', handleWebContainerReady);
+    // Compatibilidad adicional: algunos emisores usan 'webcontainer:ready'
+    const unsubscribeWebContainerReadyCompat = eventBus.subscribe('webcontainer:ready', handleWebContainerReady);
     const unsubscribeWebContainerError = eventBus.subscribe('cheesejs:webcontainer-error', handleWebContainerError);
     const unsubscribeTerminalOutput = eventBus.subscribe('terminal:output', handleTerminalOutput);
     const unsubscribeTerminalReady = eventBus.subscribe('terminal:ready', handleTerminalReady);
@@ -495,6 +515,7 @@ export const useTerminal = (options = {}) => {
     return () => {
       cleanup();
       unsubscribeWebContainerReady();
+      unsubscribeWebContainerReadyCompat();
       unsubscribeWebContainerError();
       unsubscribeTerminalOutput();
       unsubscribeTerminalReady();

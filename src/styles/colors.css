@@ -86,12 +86,28 @@
 
 /* Tema Oscuro - Sobrescribe variables cuando está activo */
 [data-theme="dark"] {
+  /* Tonos atenuados para degradados en dark */
   --color-primary-light: #1e3a5f;
   --color-secondary-light: #2d3748;
   --color-success-light: #1e4d2b;
   --color-warning-light: #744210;
   --color-danger-light: #5a1e1e;
   --color-info-light: #1e3a42;
+
+  /* Superficies en tema oscuro */
+  --surface-primary: #1a1d21;
+  --surface-secondary: #20242a;
+  --surface-tertiary: #262b32;
+
+  /* Texto en tema oscuro */
+  --text-primary: #e7ebf3;
+  --text-secondary: #c7cfdb;
+  --text-muted: #97a1b3;
+  --text-inverse: #ffffff;
+
+  /* Bordes en tema oscuro */
+  --border-primary: #2f3540;
+  --border-secondary: #3a414d;
 }
 
 /* Utilidades de Color */
