@@ -1,0 +1,356 @@
+/* Header Bar Styles */
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background-color: var(--header-background);
+  border-bottom: 1px solid var(--header-border);
+  color: var(--header-text);
+  position: relative;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+/* Logo Section */
+.header-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  font-size: 1.5rem;
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+.app-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--primary-color);
+  letter-spacing: 0.5px;
+}
+
+.version-badge {
+  background-color: var(--surface-variant);
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* Center Controls */
+.header-center {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+  max-width: 600px;
+  margin: 0 24px;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Right Controls */
+.header-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Header Buttons */
+.header-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--header-text);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-button:hover {
+  background-color: var(--surface-color);
+  border-color: var(--border-color);
+  transform: translateY(-1px);
+}
+
+.header-button:active {
+  transform: translateY(0);
+}
+
+.header-button.icon-only {
+  padding: 8px;
+  min-width: 36px;
+  justify-content: center;
+}
+
+.header-button.primary {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  font-weight: 600;
+}
+
+.header-button.primary:hover {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
+}
+
+.header-button.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.header-button.executing {
+  background-color: var(--error-color);
+  border-color: var(--error-color);
+}
+
+.header-button.executing:hover {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+/* Button Content */
+.button-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.button-text {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Executing Indicator */
+.executing-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  animation: executing 1.5s ease-in-out infinite;
+}
+
+/* Dropdown Menus */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
+  padding: 4px 0;
+  z-index: 1000;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+.dropdown-header {
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 4px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: var(--surface-color);
+}
+
+.dropdown-item.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 4px 0;
+}
+
+.item-icon {
+  font-size: 0.9rem;
+  width: 16px;
+  text-align: center;
+}
+
+.item-text {
+  flex: 1;
+}
+
+.item-check {
+  font-size: 0.8rem;
+  color: var(--success-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-bar {
+    padding: 0 12px;
+  }
+  
+  .header-center {
+    margin: 0 12px;
+  }
+  
+  .button-text {
+    display: none;
+  }
+  
+  .header-button:not(.icon-only) {
+    padding: 8px;
+    min-width: 36px;
+    justify-content: center;
+  }
+  
+  .app-title {
+    font-size: 1rem;
+  }
+  
+  .version-badge {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-center {
+    display: none;
+  }
+  
+  .dropdown-menu {
+    right: -12px;
+    min-width: 200px;
+  }
+}
+
+/* Animations */
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes executing {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus States */
+.header-button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.dropdown-item:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
+}
+
+/* Theme Transitions */
+.header-bar {
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+
+.header-button,
+.dropdown-menu,
+.dropdown-item {
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .header-bar {
+    border-bottom: 2px solid var(--text-color);
+  }
+  
+  .header-button {
+    border: 1px solid var(--text-color);
+  }
+  
+  .dropdown-menu {
+    border: 2px solid var(--text-color);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .logo-icon,
+  .executing-indicator,
+  .dropdown-menu {
+    animation: none;
+  }
+  
+  .header-button {
+    transition: none;
+  }
+}

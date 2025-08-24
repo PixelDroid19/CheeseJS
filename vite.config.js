@@ -16,6 +16,11 @@ export default defineConfig(async () => ({
     port: 1420,
     strictPort: true,
     host: host || false,
+    // Headers requeridos para WebContainers
+    headers: {
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin",
+    },
     hmr: host
       ? {
           protocol: "ws",

@@ -1,50 +1,113 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import React, { useEffect } from 'react';
+import { AppShell } from './components/layout/app-shell.jsx';
+import { MonacoEditor } from './components/editor/monaco-editor.jsx';
+import { OutputEditor } from './components/editor/output-editor.jsx';
+import { Terminal } from './components/terminal/terminal.jsx';
+import { cheeseJSCore } from './core/cheesejs-core.js';
+import { eventBus } from './utils/event-bus.js';
+import { usePanelResize } from './hooks/use-panel-resize.js';
 import "./App.css";
 
+/**
+ * App Component - Aplicación principal CheeseJS
+ * Layout de 3 paneles: Editor (izquierda), Salida (derecha), Terminal (abajo)
+ */
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  // Hook para redimensionamiento de paneles
+  const {
+    panelSizes,
+    isResizing,
+    getPanelStyles,
+    getSeparatorProps,
+    resetPanelSizes
+  } = usePanelResize(
+    {
+      editorWidth: 50,
+      outputWidth: 50,
+      topPanelHeight: 70,
+      terminalHeight: 30
+    },
+    {
+      minSizes: {
+        editorWidth: 20,
+        outputWidth: 20,
+        topPanelHeight: 50,
+        terminalHeight: 15
+      },
+      maxSizes: {
+        editorWidth: 80,
+        outputWidth: 80,
+        topPanelHeight: 85,
+        terminalHeight: 50
+      },
+      persistKey: 'cheesejs-layout',
+      onResize: (sizes) => {
+        console.log('📏 Tamaños de paneles actualizados:', sizes);
+        eventBus.emit('layout:panel-resized', sizes);
+      }
+    }
+  );
+  useEffect(() => {
+    // Inicializar CheeseJS Core
+    const initializeApp = async () => {
+      try {
+        console.log('🧀 Iniciando CheeseJS...');
+        await cheeseJSCore.initialize();
+        console.log('🧀 CheeseJS iniciado exitosamente');
+        
+        // Emitir evento de aplicación lista
+        eventBus.emit('app:ready', {
+          timestamp: Date.now(),
+          version: '0.1.0'
+        });
+        
+      } catch (error) {
+        console.error('❌ Error al inicializar CheeseJS:', error);
+        eventBus.emit('app:initialization-error', { error: error.message });
+      }
+    };
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+    initializeApp();
+
+    // Cleanup al desmontar el componente
+    return () => {
+      cheeseJSCore.destroy();
+    };
+  }, []);
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <AppShell>
+      <div className={`three-panel-layout ${isResizing ? 'resizing' : ''}`}>
+        {/* Panel superior con Editor y Salida */}
+        <div 
+          className="top-panel" 
+          style={{
+            gridTemplateColumns: `${panelSizes.editorWidth}% 4px ${panelSizes.outputWidth}%`
+          }}
+        >
+          {/* Monaco Editor - Izquierda */}
+          <div className="editor-panel">
+            <MonacoEditor />
+          </div>
+          
+          {/* Separador vertical redimensionable */}
+          <div {...getSeparatorProps('vertical-separator')}></div>
+          
+          {/* Output Editor - Derecha */}
+          <div className="output-panel">
+            <OutputEditor />
+          </div>
+        </div>
+        
+        {/* Separador horizontal redimensionable */}
+        <div {...getSeparatorProps('horizontal-separator')}></div>
+        
+        {/* Terminal - Abajo */}
+        <div className="terminal-panel">
+          <Terminal />
+        </div>
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    </AppShell>
   );
 }
 

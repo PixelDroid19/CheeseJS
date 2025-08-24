@@ -1,0 +1,294 @@
+/* Output Editor Styles */
+.output-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Output Toolbar */
+.output-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: var(--surface-variant);
+  border-bottom: 1px solid var(--border-color);
+  min-height: 40px;
+  flex-shrink: 0;
+}
+
+.output-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.output-icon {
+  font-size: 1rem;
+}
+
+.output-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.executing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+.executing-indicator .spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.last-execution {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background-color: var(--surface-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.output-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.output-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.output-btn:hover:not(:disabled) {
+  background-color: var(--surface-color);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.output-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.output-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Output Wrapper */
+.output-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--surface-color);
+}
+
+/* Output Loading */
+.output-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: var(--surface-color);
+  color: var(--text-secondary);
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 8px;
+}
+
+.output-loading p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Monaco Editor Overrides para Output */
+.output-editor-container .monaco-editor {
+  font-family: Monaco, Menlo, 'Ubuntu Mono', Consolas, 'Liberation Mono', 'Courier New', monospace !important;
+  font-size: 13px !important;
+}
+
+.output-editor-container .monaco-editor .margin {
+  background-color: var(--surface-variant) !important;
+}
+
+.output-editor-container .monaco-editor .monaco-editor-background {
+  background-color: var(--surface-color) !important;
+}
+
+.output-editor-container .monaco-editor .current-line {
+  background-color: transparent !important;
+}
+
+.output-editor-container .monaco-editor .cursor {
+  display: none !important;
+}
+
+.output-editor-container .monaco-editor .view-lines {
+  cursor: default !important;
+}
+
+.output-editor-container .monaco-editor .view-line {
+  cursor: default !important;
+}
+
+/* Scrollbar para Output Editor */
+.output-editor-container .monaco-scrollable-element > .scrollbar > .slider {
+  background-color: var(--scrollbar-thumb) !important;
+  border-radius: 3px;
+}
+
+.output-editor-container .monaco-scrollable-element > .scrollbar > .slider:hover {
+  background-color: var(--scrollbar-thumb-hover) !important;
+}
+
+.output-editor-container .monaco-scrollable-element > .scrollbar {
+  background-color: var(--scrollbar-track) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .output-toolbar {
+    padding: 6px 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .output-info {
+    order: 1;
+    flex: 1;
+  }
+  
+  .output-actions {
+    order: 2;
+    gap: 4px;
+  }
+  
+  .output-btn {
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+  
+  .output-title {
+    display: none;
+  }
+  
+  .last-execution {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .executing-indicator span {
+    display: none;
+  }
+  
+  .last-execution {
+    display: none;
+  }
+  
+  .output-btn span:last-child {
+    display: none;
+  }
+}
+
+/* Animations */
+@keyframes spin {
+  0% { 
+    transform: rotate(0deg); 
+  }
+  100% { 
+    transform: rotate(360deg); 
+  }
+}
+
+/* Focus States */
+.output-btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Theme Transitions */
+.output-editor-container,
+.output-toolbar,
+.output-btn,
+.output-loading {
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .output-editor-container {
+    border: 2px solid var(--text-color);
+  }
+  
+  .output-toolbar {
+    border-bottom: 2px solid var(--text-color);
+  }
+  
+  .output-btn {
+    border: 2px solid var(--text-color);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner,
+  .executing-indicator .spinner {
+    animation: none;
+  }
+  
+  .output-btn {
+    transition: none;
+  }
+  
+  .output-btn:hover {
+    transform: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .output-toolbar {
+    display: none;
+  }
+  
+  .output-editor-container {
+    border: none;
+    border-radius: 0;
+  }
+}

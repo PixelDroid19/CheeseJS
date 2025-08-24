@@ -1,0 +1,269 @@
+/* CheeseJS Base Theme Variables */
+
+/* Importar estilos de xterm.js */
+@import '@xterm/xterm/css/xterm.css';
+
+/* Light Theme (Default) */
+:root {
+  /* Colores principales */
+  --primary-color: #007ACC;
+  --secondary-color: #1E1E1E;
+  --accent-color: #0078D7;
+  
+  /* Backgrounds */
+  --background-color: #FFFFFF;
+  --surface-color: #F8F9FA;
+  --surface-variant: #F1F3F4;
+  --card-background: #FFFFFF;
+  
+  /* Textos */
+  --text-color: #212529;
+  --text-secondary: #6C757D;
+  --text-muted: #ADB5BD;
+  --text-inverse: #FFFFFF;
+  
+  /* Bordes */
+  --border-color: #E9ECEF;
+  --border-focus: #007ACC;
+  --divider-color: #DEE2E6;
+  
+  /* Estados */
+  --success-color: #28A745;
+  --warning-color: #FFC107;
+  --error-color: #DC3545;
+  --info-color: #17A2B8;
+  
+  /* Editor */
+  --editor-background: #FFFFFF;
+  --editor-foreground: #000000;
+  --editor-selection: #ADD6FF;
+  --editor-line-highlight: #F8F9FA;
+  --editor-gutter: #F1F3F4;
+  --editor-cursor: #000000;
+  
+  /* Console */
+  --console-background: #FFFFFF;
+  --console-text: #212529;
+  --console-error: #DC3545;
+  --console-warning: #FFC107;
+  --console-info: #17A2B8;
+  --console-success: #28A745;
+  
+  /* Terminal */
+  --terminal-background: #FFFFFF;
+  --terminal-foreground: #212529;
+  --terminal-cursor: #212529;
+  --terminal-selection: #ADD6FF;
+  --terminal-header-bg: #F8F9FA;
+  --terminal-border: #E9ECEF;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  --shadow-md: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+  --shadow-lg: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+  
+  /* Header */
+  --header-background: #F8F9FA;
+  --header-text: #212529;
+  --header-border: #DEE2E6;
+  
+  /* Sidebar */
+  --sidebar-background: #F1F3F4;
+  --sidebar-text: #495057;
+  --sidebar-hover: #E9ECEF;
+  --sidebar-active: #007ACC;
+  
+  /* Scrollbar */
+  --scrollbar-track: #F1F3F4;
+  --scrollbar-thumb: #CED4DA;
+  --scrollbar-thumb-hover: #ADB5BD;
+}
+
+/* Dark Theme */
+.theme-dark {
+  /* Colores principales */
+  --primary-color: #007ACC;
+  --secondary-color: #FFFFFF;
+  --accent-color: #0078D7;
+  
+  /* Backgrounds */
+  --background-color: #1E1E1E;
+  --surface-color: #252526;
+  --surface-variant: #2D2D30;
+  --card-background: #2D2D30;
+  
+  /* Textos */
+  --text-color: #CCCCCC;
+  --text-secondary: #999999;
+  --text-muted: #6A6A6A;
+  --text-inverse: #1E1E1E;
+  
+  /* Bordes */
+  --border-color: #3E3E42;
+  --border-focus: #007ACC;
+  --divider-color: #3E3E42;
+  
+  /* Estados */
+  --success-color: #28A745;
+  --warning-color: #FFC107;
+  --error-color: #F44747;
+  --info-color: #17A2B8;
+  
+  /* Editor */
+  --editor-background: #1E1E1E;
+  --editor-foreground: #D4D4D4;
+  --editor-selection: #264F78;
+  --editor-line-highlight: #2D2D30;
+  --editor-gutter: #252526;
+  --editor-cursor: #AEAFAD;
+  
+  /* Console */
+  --console-background: #1E1E1E;
+  --console-text: #CCCCCC;
+  --console-error: #F44747;
+  --console-warning: #FFCC02;
+  --console-info: #75BEFF;
+  --console-success: #89D185;
+  
+  /* Terminal */
+  --terminal-background: #1E1E1E;
+  --terminal-foreground: #D4D4D4;
+  --terminal-cursor: #FFFFFF;
+  --terminal-selection: #264F78;
+  --terminal-header-bg: #2D2D30;
+  --terminal-border: #3E3E42;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 3px 6px rgba(0,0,0,0.4), 0 3px 6px rgba(0,0,0,0.5);
+  --shadow-lg: 0 10px 20px rgba(0,0,0,0.5), 0 6px 6px rgba(0,0,0,0.6);
+  
+  /* Header */
+  --header-background: #2D2D30;
+  --header-text: #CCCCCC;
+  --header-border: #3E3E42;
+  
+  /* Sidebar */
+  --sidebar-background: #252526;
+  --sidebar-text: #CCCCCC;
+  --sidebar-hover: #2D2D30;
+  --sidebar-active: #007ACC;
+  
+  /* Scrollbar */
+  --scrollbar-track: #2D2D30;
+  --scrollbar-thumb: #424242;
+  --scrollbar-thumb-hover: #4F4F4F;
+}
+
+/* Global Styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Scrollbars globales */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Focus ring global */
+*:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Theme transitions */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Utility classes */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --border-color: var(--text-color);
+    --divider-color: var(--text-color);
+  }
+  
+  .theme-dark {
+    --border-color: var(--text-color);
+    --divider-color: var(--text-color);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  :root {
+    --background-color: white;
+    --text-color: black;
+    --border-color: black;
+  }
+  
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+}

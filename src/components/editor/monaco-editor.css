@@ -1,0 +1,342 @@
+/* Monaco Editor Styles */
+.monaco-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--editor-background);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Editor Toolbar */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: var(--surface-variant);
+  border-bottom: 1px solid var(--border-color);
+  min-height: 40px;
+  flex-shrink: 0;
+}
+
+.editor-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-icon {
+  font-size: 1rem;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-color);
+  font-family: Monaco, Menlo, 'Ubuntu Mono', monospace;
+}
+
+.editor-status {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  background-color: var(--surface-color);
+  border-radius: 4px;
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editor-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.editor-btn:hover {
+  background-color: var(--surface-color);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.editor-btn:active {
+  transform: translateY(0);
+}
+
+.editor-btn:first-child {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.editor-btn:first-child:hover {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+/* Editor Wrapper */
+.editor-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Editor Loading */
+.editor-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: var(--editor-background);
+  color: var(--text-secondary);
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+.editor-loading p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Monaco Editor Overrides */
+.monaco-editor-container .monaco-editor {
+  font-family: Monaco, Menlo, 'Ubuntu Mono', Consolas, 'Liberation Mono', 'Courier New', monospace !important;
+}
+
+.monaco-editor-container .monaco-editor .margin {
+  background-color: var(--editor-gutter) !important;
+}
+
+.monaco-editor-container .monaco-editor .monaco-editor-background {
+  background-color: var(--editor-background) !important;
+}
+
+.monaco-editor-container .monaco-editor .current-line {
+  background-color: var(--editor-line-highlight) !important;
+}
+
+.monaco-editor-container .monaco-editor .selected-text {
+  background-color: var(--editor-selection) !important;
+}
+
+/* Scrollbar Customization */
+.monaco-editor-container .monaco-scrollable-element > .scrollbar > .slider {
+  background-color: var(--scrollbar-thumb) !important;
+  border-radius: 3px;
+}
+
+.monaco-editor-container .monaco-scrollable-element > .scrollbar > .slider:hover {
+  background-color: var(--scrollbar-thumb-hover) !important;
+}
+
+.monaco-editor-container .monaco-scrollable-element > .scrollbar {
+  background-color: var(--scrollbar-track) !important;
+}
+
+/* Minimap Customization */
+.monaco-editor-container .monaco-editor .minimap {
+  background-color: var(--surface-variant) !important;
+}
+
+/* Suggestion Widget */
+.monaco-editor-container .monaco-editor .suggest-widget {
+  background-color: var(--card-background) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.monaco-editor-container .monaco-editor .suggest-widget .monaco-list .monaco-list-row {
+  color: var(--text-color) !important;
+}
+
+.monaco-editor-container .monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+/* Parameter Hints */
+.monaco-editor-container .monaco-editor .parameter-hints-widget {
+  background-color: var(--card-background) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* Context Menu */
+.monaco-editor-container .monaco-menu {
+  background-color: var(--card-background) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.monaco-editor-container .monaco-menu .monaco-action-bar .action-item .action-label {
+  color: var(--text-color) !important;
+}
+
+.monaco-editor-container .monaco-menu .monaco-action-bar .action-item .action-label:hover {
+  background-color: var(--surface-color) !important;
+}
+
+/* Find Widget */
+.monaco-editor-container .monaco-editor .find-widget {
+  background-color: var(--card-background) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.monaco-editor-container .monaco-editor .find-widget input {
+  background-color: var(--surface-color) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Hover Widget */
+.monaco-editor-container .monaco-editor .monaco-hover {
+  background-color: var(--card-background) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* Error Squiggles */
+.monaco-editor-container .monaco-editor .squiggly-error {
+  border-bottom: 2px dotted var(--error-color) !important;
+}
+
+.monaco-editor-container .monaco-editor .squiggly-warning {
+  border-bottom: 2px dotted var(--warning-color) !important;
+}
+
+.monaco-editor-container .monaco-editor .squiggly-info {
+  border-bottom: 2px dotted var(--info-color) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .editor-toolbar {
+    padding: 6px 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .editor-info {
+    order: 1;
+    flex: 1;
+  }
+  
+  .editor-actions {
+    order: 2;
+    gap: 4px;
+  }
+  
+  .editor-btn {
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+  
+  .file-name {
+    display: none;
+  }
+  
+  .editor-status {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-actions {
+    flex-wrap: wrap;
+  }
+  
+  .editor-btn span:last-child {
+    display: none;
+  }
+}
+
+/* Animations */
+@keyframes spin {
+  0% { 
+    transform: rotate(0deg); 
+  }
+  100% { 
+    transform: rotate(360deg); 
+  }
+}
+
+/* Focus States */
+.editor-btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Theme Transitions */
+.monaco-editor-container,
+.editor-toolbar,
+.editor-btn,
+.editor-loading {
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .monaco-editor-container {
+    border: 2px solid var(--text-color);
+  }
+  
+  .editor-toolbar {
+    border-bottom: 2px solid var(--text-color);
+  }
+  
+  .editor-btn {
+    border: 2px solid var(--text-color);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+  
+  .editor-btn {
+    transition: none;
+  }
+  
+  .editor-btn:hover {
+    transform: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .editor-toolbar {
+    display: none;
+  }
+  
+  .monaco-editor-container {
+    border: none;
+    border-radius: 0;
+  }
+}
