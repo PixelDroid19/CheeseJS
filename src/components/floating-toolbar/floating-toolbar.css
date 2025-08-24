@@ -1,4 +1,15 @@
-/* FloatingToolbar Component Styles */
+/* FloatingToolbar Component Styles - MEJORADO CON ICONOS LUCIDE
+ * 
+ * MEJORAS IMPLEMENTADAS:
+ * ✅ Eliminadas duplicaciones CSS con editor-toolbar y header-bar
+ * ✅ Mejorada integración con sistema de temas (variables CSS)
+ * ✅ Optimizado diseño responsive para diferentes breakpoints
+ * ✅ Agregados estilos para dropdown de idiomas
+ * ✅ Mejor ocupación de espacio en mobile/tablet
+ * ✅ ✨ NUEVO: Optimizado para iconos Lucide únicamente
+ * ✅ ✨ NUEVO: Eliminado todo texto visible de botones
+ * ✅ ✨ NUEVO: Tooltips como única fuente de etiquetas
+ */
 .floating-toolbar {
   position: fixed;
   z-index: var(--z-floating-toolbar);
@@ -14,19 +25,30 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--surface-primary, rgba(255, 255, 255, 0.85));
+  border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.3));
   border-radius: var(--radius-pill);
   padding: var(--spacing-sm);
   box-shadow: var(--shadow-floating);
   min-height: 48px;
   position: relative;
+  transition: all var(--transition-normal);
 }
 
-/* Dark theme adjustments */
+/* Dark theme adjustments - Mejorada integración */
 [data-theme="dark"] .floating-toolbar__container {
-  background: rgba(30, 30, 30, 0.85);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--surface-primary, rgba(30, 30, 30, 0.85));
+  border-color: var(--border-primary, rgba(255, 255, 255, 0.1));
+}
+
+/* Asegurar compatibilidad con diferentes temas */
+.floating-toolbar__container {
+  /* Usar variables del sistema de temas */
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .floating-toolbar__container {
+  color: var(--text-primary);
 }
 
 /* Position variants */
@@ -113,6 +135,31 @@
   align-items: center;
 }
 
+/* Language dropdown specific styles */
+.floating-toolbar__dropdown.language-dropdown {
+  min-width: 180px;
+}
+
+.dropdown-item__check {
+  color: var(--color-success, #28a745);
+  margin-left: auto;
+}
+
+.dropdown-item__arrow {
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.dropdown-item.active {
+  background-color: var(--color-primary-light, rgba(0, 122, 204, 0.1));
+  color: var(--color-primary, #007acc);
+}
+
+.dropdown-item.active:hover {
+  background-color: var(--color-primary, #007acc);
+  color: white;
+}
+
 /* Dropdown menu */
 .floating-toolbar__dropdown {
   position: absolute;
@@ -188,9 +235,32 @@
   padding: var(--spacing-xs);
 }
 
-/* Toolbar actions */
+/* Toolbar actions - Optimizado para iconos únicamente */
 .toolbar-action {
   flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+/* Icon-only buttons styling */
+.toolbar-action--icon-only {
+  min-width: 40px;
+  min-height: 40px;
+  padding: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toolbar-action--icon-only .ui-icon {
+  transition: all var(--transition-fast);
+}
+
+.toolbar-action--icon-only:hover .ui-icon {
+  transform: scale(1.1);
+}
+
+.toolbar-action--icon-only:active .ui-icon {
+  transform: scale(0.95);
 }
 
 /* Tooltip styling */
@@ -230,32 +300,53 @@
   box-shadow: var(--shadow-floating), 0 0 0 2px var(--color-primary-light);
 }
 
-/* Responsive design */
+/* Responsive design - Mejorado para ocupación de espacio óptima */
+@media (max-width: 1024px) {
+  .floating-toolbar {
+    /* En tablets, posición más cómoda */
+    bottom: 16px !important;
+  }
+  
+  .floating-toolbar__container {
+    padding: var(--spacing-sm) var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+  
+  .floating-toolbar__primary {
+    gap: var(--spacing-sm);
+  }
+}
+
 @media (max-width: 768px) {
   .floating-toolbar {
-    left: 12px !important;
-    right: 12px !important;
-    bottom: 12px !important;
+    /* Ocupar ancho completo en mobile con espaciado lateral */
+    left: var(--spacing-md) !important;
+    right: var(--spacing-md) !important;
+    bottom: var(--spacing-md) !important;
     transform: none !important;
-    width: calc(100% - 24px);
+    width: calc(100% - calc(var(--spacing-md) * 2));
+    max-width: none;
   }
   
   .floating-toolbar--bottom-center,
   .floating-toolbar--bottom-left,
   .floating-toolbar--bottom-right {
-    left: 12px;
-    right: 12px;
+    left: var(--spacing-md);
+    right: var(--spacing-md);
     transform: none;
-    width: calc(100% - 24px);
+    width: calc(100% - calc(var(--spacing-md) * 2));
   }
   
   .floating-toolbar__container {
     justify-content: space-between;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-md);
+    min-height: 56px; /* Touch-friendly height */
   }
   
   .floating-toolbar__primary {
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
+    flex: 1;
+    justify-content: flex-start;
   }
   
   .floating-toolbar__drag-handle {
@@ -265,33 +356,94 @@
   .floating-toolbar__dropdown {
     right: auto;
     left: 0;
-    width: 100%;
+    width: calc(100% - 24px);
     min-width: auto;
+    max-width: 320px;
   }
   
-  /* Make buttons touch-friendly */
-  .toolbar-action {
-    min-height: 44px;
-    min-width: 44px;
+  .floating-toolbar__dropdown.language-dropdown {
+    width: calc(100% - 24px);
+    max-width: 280px;
+  }
+  
+  /* Make buttons touch-friendly para iconos */
+  .toolbar-action,
+  .toolbar-action--icon-only {
+    min-height: 48px;
+    min-width: 48px;
+    padding: var(--spacing-md);
+  }
+  
+  .toolbar-action--icon-only .ui-icon {
+    /* Iconos más grandes en mobile */
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* Optimizar espaciado de tooltips en mobile */
+  .toolbar-tooltip {
+    font-size: 14px;
+  }
+  
+  .toolbar-tooltip__shortcut {
+    font-size: 12px;
   }
 }
 
 @media (max-width: 480px) {
+  .floating-toolbar {
+    /* Ocupar prácticamente todo el ancho en pantallas muy pequeñas */
+    left: var(--spacing-sm) !important;
+    right: var(--spacing-sm) !important;
+    bottom: var(--spacing-sm) !important;
+    width: calc(100% - calc(var(--spacing-sm) * 2));
+  }
+  
   .floating-toolbar__separator {
-    display: none;
+    display: none; /* Hide separators on very small screens */
   }
   
   .floating-toolbar__primary {
-    gap: 4px;
+    gap: var(--spacing-xs);
   }
   
   .floating-toolbar__container {
-    padding: 6px 12px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: 52px;
   }
   
-  /* Stack dropdown items on very small screens */
+  /* Compact dropdown on very small screens */
   .dropdown-item__shortcut {
     display: none;
+  }
+  
+  .dropdown-item {
+    padding: var(--spacing-md) var(--spacing-sm);
+    font-size: 14px;
+  }
+  
+  .dropdown-header {
+    padding: var(--spacing-sm);
+    font-size: 12px;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  .floating-toolbar {
+    bottom: var(--spacing-xs) !important;
+  }
+  
+  .floating-toolbar__container {
+    min-height: 44px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+  
+  .toolbar-action,
+  .toolbar-action--icon-only {
+    min-height: 40px;
+    min-width: 40px;
+    padding: var(--spacing-xs);
   }
 }
 

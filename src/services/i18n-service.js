@@ -63,7 +63,8 @@ class I18nService {
    * Cargar traducciones por defecto
    */
   async loadTranslations() {
-    // Traducciones en español
+    console.log('🌍 Cargando traducciones mejoradas del floating toolbar...');
+    // Traducciones en español - Actualizadas para floating toolbar
     this.translations.set('es', {
       header: {
         run: 'Ejecutar',
@@ -148,6 +149,29 @@ class I18nService {
         codeSaved: 'Código guardado correctamente',
         packageInstalled: 'Paquete instalado correctamente',
         settingsSaved: 'Configuración guardada'
+      },
+      toolbar: {
+        run: 'Ejecutar',
+        stop: 'Detener',
+        newFile: 'Nuevo Archivo',
+        save: 'Guardar',
+        format: 'Formatear Código',
+        packages: 'Paquetes',
+        examples: 'Ejemplos',
+        toggleConsole: 'Toggle Consola',
+        language: 'Cambiar Idioma',
+        toggleTheme: 'Cambiar Tema',
+        settings: 'Configuración',
+        help: 'Ayuda',
+        moreActions: 'Más Acciones',
+        expand: 'Expandir',
+        collapse: 'Colapsar',
+        formatCodeShortcut: 'Ctrl+Shift+F',
+        runCodeShortcut: 'Ctrl+Enter',
+        saveFileShortcut: 'Ctrl+S',
+        newFileShortcut: 'Ctrl+N',
+        toggleConsoleShortcut: 'Ctrl+`',
+        helpShortcut: 'F1'
       },
       time: {
         seconds: 'segundos',
@@ -243,6 +267,29 @@ class I18nService {
         codeSaved: 'Code saved successfully',
         packageInstalled: 'Package installed successfully',
         settingsSaved: 'Settings saved'
+      },
+      toolbar: {
+        run: 'Run',
+        stop: 'Stop',
+        newFile: 'New File',
+        save: 'Save',
+        format: 'Format Code',
+        packages: 'Packages',
+        examples: 'Examples',
+        toggleConsole: 'Toggle Console',
+        language: 'Change Language',
+        toggleTheme: 'Toggle Theme',
+        settings: 'Settings',
+        help: 'Help',
+        moreActions: 'More Actions',
+        expand: 'Expand',
+        collapse: 'Collapse',
+        formatCodeShortcut: 'Ctrl+Shift+F',
+        runCodeShortcut: 'Ctrl+Enter',
+        saveFileShortcut: 'Ctrl+S',
+        newFileShortcut: 'Ctrl+N',
+        toggleConsoleShortcut: 'Ctrl+`',
+        helpShortcut: 'F1'
       },
       time: {
         seconds: 'seconds',

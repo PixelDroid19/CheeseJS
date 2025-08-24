@@ -122,10 +122,32 @@ obtenerDatos().then(datos => {
       stopExecution();
     });
 
+    const unsubscribeFormatRequested = eventBus.subscribe('code:format-requested', () => {
+      formatCode();
+    });
+
+    const unsubscribeFileNewRequested = eventBus.subscribe('file:new-requested', () => {
+      // Limpiar editor con plantilla básica
+      setCode(`// 🧀 Nuevo archivo en CheeseJS
+// Escribe tu código JavaScript aquí
+
+console.log('¡Hola CheeseJS! 🧀');
+
+// Tu código aquí...
+`);
+    });
+
+    const unsubscribeFileSaveRequested = eventBus.subscribe('file:save-requested', () => {
+      saveCode();
+    });
+
     return () => {
       unsubscribeConfigChanged();
       unsubscribeRunRequested();
       unsubscribeStopRequested();
+      unsubscribeFormatRequested();
+      unsubscribeFileNewRequested();
+      unsubscribeFileSaveRequested();
     };
   }, []);
 
@@ -331,40 +353,6 @@ obtenerDatos().then(datos => {
 
   return (
     <div className="monaco-editor-container">
-      <div className="editor-toolbar">
-        <div className="editor-info">
-          <span className="file-icon">📄</span>
-          <span className="file-name">index.js</span>
-          <span className="editor-status">
-            {isReady ? '✅ Listo' : '⏳ Cargando...'}
-          </span>
-        </div>
-        
-        <div className="editor-actions">
-          <button 
-            className="editor-btn"
-            onClick={executeCode}
-            title="Ejecutar código (Ctrl+Enter)"
-          >
-            ▶️ Ejecutar
-          </button>
-          <button 
-            className="editor-btn"
-            onClick={formatCode}
-            title="Formatear código (Ctrl+Shift+F)"
-          >
-            🎨 Formatear
-          </button>
-          <button 
-            className="editor-btn"
-            onClick={saveCode}
-            title="Guardar código (Ctrl+S)"
-          >
-            💾 Guardar
-          </button>
-        </div>
-      </div>
-
       <div className="editor-wrapper">
         <Editor
           height="100%"

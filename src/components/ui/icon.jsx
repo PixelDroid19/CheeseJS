@@ -1,9 +1,37 @@
 import React from 'react';
+import {
+  // Acciones básicas
+  Play, Pause, Square, RotateCcw, Search, Settings, X, Plus, Minus, Trash2,
+  Edit, Save, Download, Upload, Copy, Clipboard, Scissors,
+  // Navegación
+  Home, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Menu, MoreHorizontal,
+  ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
+  // Archivos y carpetas
+  File, Folder, FolderOpen, Image, Code, Package,
+  // Estados
+  Check, AlertTriangle, Info, Loader, X as XIcon,
+  // Comunicación
+  Mail, MessageCircle, Bell, Share, Link,
+  // Usuario
+  User, Users, LogOut, LogIn,
+  // Desarrollo
+  Terminal, Monitor, Bug, GitBranch, GitCommit, GitMerge,
+  // Herramientas
+  Wrench, Sliders, Palette, Globe, HelpCircle, BookOpen,
+  // Medios
+  PlayCircle, Volume2, VolumeX, Maximize, Minimize,
+  // Conectividad
+  Wifi, Bluetooth, WifiOff, Circle,
+  // Seguridad
+  Lock, Unlock, Key, Shield,
+  // Formateo y desarrollo
+  AlignLeft, Type, Zap
+} from 'lucide-react';
 import './icon.css';
 
 /**
- * Icon Component
- * Componente de icono reutilizable con soporte para múltiples sets de iconos
+ * Icon Component - Actualizado con Lucide React
+ * Componente de icono reutilizable con iconos ligeros de Lucide
  */
 export const Icon = ({
   name,
@@ -11,6 +39,7 @@ export const Icon = ({
   color,
   className = '',
   style = {},
+  strokeWidth = 2,
   ...props
 }) => {
   const baseClass = 'ui-icon';
@@ -22,134 +51,145 @@ export const Icon = ({
     ...(color && { color })
   };
 
-  // Map de iconos disponibles
+  // Map de iconos Lucide disponibles
   const iconMap = {
-    // Acciones básicas
-    'play': '▶️',
-    'pause': '⏸️',
-    'stop': '⏹️',
-    'refresh': '🔄',
-    'search': '🔍',
-    'settings': '⚙️',
-    'close': '✕',
-    'add': '➕',
-    'remove': '➖',
-    'delete': '🗑️',
-    'edit': '✏️',
-    'save': '💾',
-    'download': '⬇️',
-    'upload': '⬆️',
-    'copy': '📋',
-    'paste': '📄',
-    'cut': '✂️',
+    // Acciones básicas - FloatingToolbar
+    'play': Play,
+    'pause': Pause,
+    'stop': Square,
+    'refresh': RotateCcw,
+    'search': Search,
+    'settings': Settings,
+    'close': X,
+    'add': Plus,
+    'remove': Minus,
+    'delete': Trash2,
+    'edit': Edit,
+    'save': Save,
+    'download': Download,
+    'upload': Upload,
+    'copy': Copy,
+    'paste': Clipboard,
+    'cut': Scissors,
+    'format': AlignLeft, // Para formatear código
     
     // Navegación
-    'home': '🏠',
-    'back': '⬅️',
-    'forward': '➡️',
-    'up': '⬆️',
-    'down': '⬇️',
-    'left': '⬅️',
-    'right': '➡️',
-    'menu': '☰',
-    'more': '⋯',
-    'expand': '⌄',
-    'collapse': '⌃',
+    'home': Home,
+    'back': ArrowLeft,
+    'forward': ArrowRight,
+    'up': ArrowUp,
+    'down': ArrowDown,
+    'left': ArrowLeft,
+    'right': ArrowRight,
+    'menu': Menu,
+    'more': MoreHorizontal,
+    'expand': ChevronDown,
+    'collapse': ChevronUp,
+    'chevron-right': ChevronRight,
+    'chevron-left': ChevronLeft,
     
     // Archivos y carpetas
-    'file': '📄',
-    'folder': '📁',
-    'folder-open': '📂',
-    'image': '🖼️',
-    'code': '💻',
-    'package': '📦',
+    'file': File,
+    'folder': Folder,
+    'folder-open': FolderOpen,
+    'image': Image,
+    'code': Code,
+    'package': Package,
     
     // Estados
-    'success': '✅',
-    'error': '❌',
-    'warning': '⚠️',
-    'info': 'ℹ️',
-    'loading': '⏳',
-    'check': '✓',
-    'x': '✗',
+    'success': Check,
+    'error': XIcon,
+    'warning': AlertTriangle,
+    'info': Info,
+    'loading': Loader,
+    'check': Check,
+    'x': XIcon,
     
     // Comunicación
-    'mail': '📧',
-    'message': '💬',
-    'notification': '🔔',
-    'share': '📤',
-    'link': '🔗',
+    'mail': Mail,
+    'message': MessageCircle,
+    'notification': Bell,
+    'share': Share,
+    'link': Link,
     
     // Usuario
-    'user': '👤',
-    'users': '👥',
-    'profile': '🧑',
-    'logout': '🚪',
-    'login': '🔑',
+    'user': User,
+    'users': Users,
+    'profile': User,
+    'logout': LogOut,
+    'login': LogIn,
     
     // Desarrollo
-    'terminal': '⌨️',
-    'console': '🖥️',
-    'debug': '🐛',
-    'git': '🌿',
-    'branch': '🌳',
-    'commit': '📝',
-    'merge': '🔀',
-    'pull': '⬇️',
-    'push': '⬆️',
+    'terminal': Terminal,
+    'console': Monitor,
+    'debug': Bug,
+    'git': GitBranch,
+    'branch': GitBranch,
+    'commit': GitCommit,
+    'merge': GitMerge,
     
     // Herramientas
-    'tools': '🔧',
-    'config': '⚙️',
-    'preferences': '🎛️',
-    'theme': '🎨',
-    'language': '🌐',
-    'help': '❓',
-    'docs': '📚',
+    'tools': Wrench,
+    'config': Settings,
+    'preferences': Sliders,
+    'theme': Palette,
+    'language': Globe,
+    'help': HelpCircle,
+    'docs': BookOpen,
     
     // Medios
-    'play-circle': '⏯️',
-    'volume': '🔊',
-    'mute': '🔇',
-    'fullscreen': '⛶',
-    'minimize': '🗕',
-    'maximize': '🗖',
+    'play-circle': PlayCircle,
+    'volume': Volume2,
+    'mute': VolumeX,
+    'fullscreen': Maximize,
+    'minimize': Minimize,
+    'maximize': Maximize,
     
     // Conectividad
-    'wifi': '📶',
-    'bluetooth': '🔵',
-    'offline': '📴',
-    'online': '🟢',
-    'sync': '🔄',
+    'wifi': Wifi,
+    'bluetooth': Bluetooth,
+    'offline': WifiOff,
+    'online': Circle,
+    'sync': RotateCcw,
     
     // Seguridad
-    'lock': '🔒',
-    'unlock': '🔓',
-    'key': '🔑',
-    'shield': '🛡️',
-    'security': '🔐',
+    'lock': Lock,
+    'unlock': Unlock,
+    'key': Key,
+    'shield': Shield,
+    'security': Shield,
     
     // CheeseJS específicos
-    'cheese': '🧀',
-    'javascript': '🟨',
-    'node': '🟢',
-    'npm': '📦',
-    'vite': '⚡',
-    'tauri': '🦀'
+    'cheese': Circle, // Placeholder, puede usar un ícono personalizado
+    'javascript': Code,
+    'node': Circle,
+    'npm': Package,
+    'vite': Zap,
+    'tauri': Shield
   };
 
-  const iconContent = iconMap[name] || name || '❓';
+  const IconComponent = iconMap[name];
+  
+  // Si no encontramos el ícono, mostramos un placeholder
+  if (!IconComponent) {
+    console.warn(`Ícono '${name}' no encontrado en Lucide React`);
+    return (
+      <HelpCircle 
+        className={classes}
+        style={iconStyle}
+        strokeWidth={strokeWidth}
+        {...props}
+      />
+    );
+  }
 
   return (
-    <span
+    <IconComponent
       className={classes}
       style={iconStyle}
-      role="img"
-      aria-label={name}
+      strokeWidth={strokeWidth}
       {...props}
-    >
-      {iconContent}
-    </span>
+    />
   );
 };
 

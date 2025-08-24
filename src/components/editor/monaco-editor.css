@@ -9,85 +9,6 @@
   overflow: hidden;
 }
 
-/* Editor Toolbar */
-.editor-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background-color: var(--surface-variant);
-  border-bottom: 1px solid var(--border-color);
-  min-height: 40px;
-  flex-shrink: 0;
-}
-
-.editor-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.file-icon {
-  font-size: 1rem;
-}
-
-.file-name {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-color);
-  font-family: Monaco, Menlo, 'Ubuntu Mono', monospace;
-}
-
-.editor-status {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  padding: 2px 6px;
-  background-color: var(--surface-color);
-  border-radius: 4px;
-}
-
-.editor-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.editor-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  color: var(--text-color);
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.editor-btn:hover {
-  background-color: var(--surface-color);
-  border-color: var(--primary-color);
-  transform: translateY(-1px);
-}
-
-.editor-btn:active {
-  transform: translateY(0);
-}
-
-.editor-btn:first-child {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-.editor-btn:first-child:hover {
-  background-color: var(--accent-color);
-  border-color: var(--accent-color);
-}
-
 /* Editor Wrapper */
 .editor-wrapper {
   flex: 1;
@@ -235,43 +156,14 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .editor-toolbar {
-    padding: 6px 8px;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  
-  .editor-info {
-    order: 1;
-    flex: 1;
-  }
-  
-  .editor-actions {
-    order: 2;
-    gap: 4px;
-  }
-  
-  .editor-btn {
-    padding: 4px 6px;
-    font-size: 0.75rem;
-  }
-  
-  .file-name {
-    display: none;
-  }
-  
-  .editor-status {
-    font-size: 0.7rem;
+  .monaco-editor-container {
+    border-radius: 4px;
   }
 }
 
 @media (max-width: 480px) {
-  .editor-actions {
-    flex-wrap: wrap;
-  }
-  
-  .editor-btn span:last-child {
-    display: none;
+  .monaco-editor-container {
+    border-radius: 0;
   }
 }
 
@@ -286,15 +178,10 @@
 }
 
 /* Focus States */
-.editor-btn:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
+/* Las acciones ahora están en el floating toolbar */
 
 /* Theme Transitions */
 .monaco-editor-container,
-.editor-toolbar,
-.editor-btn,
 .editor-loading {
   transition: background-color 0.3s, border-color 0.3s, color 0.3s;
 }
@@ -304,14 +191,6 @@
   .monaco-editor-container {
     border: 2px solid var(--text-color);
   }
-  
-  .editor-toolbar {
-    border-bottom: 2px solid var(--text-color);
-  }
-  
-  .editor-btn {
-    border: 2px solid var(--text-color);
-  }
 }
 
 /* Reduced Motion */
@@ -319,22 +198,10 @@
   .loading-spinner {
     animation: none;
   }
-  
-  .editor-btn {
-    transition: none;
-  }
-  
-  .editor-btn:hover {
-    transform: none;
-  }
 }
 
 /* Print Styles */
 @media print {
-  .editor-toolbar {
-    display: none;
-  }
-  
   .monaco-editor-container {
     border: none;
     border-radius: 0;

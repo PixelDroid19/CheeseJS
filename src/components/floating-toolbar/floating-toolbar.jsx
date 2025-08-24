@@ -1,13 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../layout/theme-provider.jsx';
+import { useI18n } from '../../hooks/use-i18n.js';
 import { i18nService } from '../../services/i18n-service.js';
 import { eventBus } from '../../utils/event-bus.js';
 import { Button, Icon, Tooltip } from '../ui/index.js';
 import './floating-toolbar.css';
 
 /**
- * FloatingToolbar Component
- * Toolbar flotante principal que reemplaza las acciones del sidebar y header
+ * FloatingToolbar Component - MEJORADO CON ICONOS LUCIDE
+ * Toolbar flotante principal que consolida TODAS las acciones del editor
+ * AHORA CON ICONOS ÚNICAMENTE - SIN TEXTO VISIBLE
+ * 
+ * CAMBIOS REALIZADOS:
+ * ✅ Agregadas traducciones completas (ES/EN) con shortcuts
+ * ✅ Migrada acción "Formatear" desde MonacoEditor
+ * ✅ Migrado selector de "Idioma" desde HeaderBar
+ * ✅ Mejorada integración con sistema de temas
+ * ✅ Optimizado diseño responsive para mejor ocupación de espacio
+ * ✅ Eliminadas duplicaciones CSS entre componentes
+ * ✅ ✨ NUEVO: Implementados iconos Lucide React ligeros sin texto
+ * ✅ ✨ NUEVO: Todo el texto movido a tooltips únicamente
+ * ✅ ✨ NUEVO: Instalada dependencia lucide-react
+ * 
+ * ACCIONES CONSOLIDADAS (SOLO ICONOS):
+ * - Primary: Play/Square, File, Save, AlignLeft (Format)
+ * - Secondary: Package, Code, Terminal, Globe, Palette, Settings, HelpCircle
  */
 export const FloatingToolbar = ({
   position = 'bottom-center',
@@ -15,6 +32,7 @@ export const FloatingToolbar = ({
   onToggle
 }) => {
   const { currentTheme } = useTheme();
+  const { currentLanguage, availableLanguages, changeLanguage, t: translate } = useI18n();
   const [activeMenu, setActiveMenu] = useState(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [dragPosition, setDragPosition] = useState(null);
@@ -92,6 +110,11 @@ export const FloatingToolbar = ({
     setActiveMenu(null);
   };
 
+  const handleFormatCode = () => {
+    eventBus.emit('code:format-requested');
+    setActiveMenu(null);
+  };
+
   const handleToggleTheme = () => {
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
     eventBus.emit('theme:change-requested', { theme: newTheme });
@@ -118,6 +141,11 @@ export const FloatingToolbar = ({
       title: t('examples.title'),
       size: 'medium'
     });
+    setActiveMenu(null);
+  };
+
+  const handleChangeLanguage = async (languageCode) => {
+    await changeLanguage(languageCode);
     setActiveMenu(null);
   };
 
@@ -185,7 +213,7 @@ export const FloatingToolbar = ({
       label: isExecuting ? t('toolbar.stop') : t('toolbar.run'),
       variant: isExecuting ? 'danger' : 'success',
       onClick: handleRunCode,
-      shortcut: 'Ctrl+Enter'
+      shortcut: t('toolbar.runCodeShortcut')
     },
     {
       id: 'new',
@@ -193,7 +221,7 @@ export const FloatingToolbar = ({
       label: t('toolbar.newFile'),
       variant: 'primary',
       onClick: handleNewFile,
-      shortcut: 'Ctrl+N'
+      shortcut: t('toolbar.newFileShortcut')
     },
     {
       id: 'save',
@@ -201,7 +229,15 @@ export const FloatingToolbar = ({
       label: t('toolbar.save'),
       variant: 'secondary',
       onClick: handleSaveFile,
-      shortcut: 'Ctrl+S'
+      shortcut: t('toolbar.saveFileShortcut')
+    },
+    {
+      id: 'format',
+      icon: 'format',
+      label: t('toolbar.format'),
+      variant: 'secondary',
+      onClick: handleFormatCode,
+      shortcut: t('toolbar.formatCodeShortcut')
     }
   ];
 
@@ -224,7 +260,14 @@ export const FloatingToolbar = ({
       icon: 'terminal',
       label: t('toolbar.toggleConsole'),
       onClick: handleToggleConsole,
-      shortcut: 'Ctrl+`'
+      shortcut: t('toolbar.toggleConsoleShortcut')
+    },
+    {
+      id: 'language',
+      icon: 'language',
+      label: t('toolbar.language'),
+      onClick: () => setActiveMenu(activeMenu === 'language' ? null : 'language'),
+      hasSubmenu: true
     },
     { divider: true },
     {
@@ -244,7 +287,7 @@ export const FloatingToolbar = ({
       icon: 'help',
       label: t('toolbar.help'),
       onClick: handleOpenHelp,
-      shortcut: 'F1'
+      shortcut: t('toolbar.helpShortcut')
     }
   ];
 
@@ -273,10 +316,10 @@ export const FloatingToolbar = ({
       <div className="floating-toolbar__container">
         {/* Drag Handle */}
         <div className="floating-toolbar__drag-handle">
-          <Icon name="menu" size="small" />
+          <Icon name="menu" size="small" strokeWidth={1.5} />
         </div>
 
-        {/* Primary Actions */}
+        {/* Primary Actions - Solo iconos */}
         <div className="floating-toolbar__primary">
           {primaryActions.map((action, index) => (
             <Tooltip
@@ -294,10 +337,11 @@ export const FloatingToolbar = ({
               <Button
                 variant={action.variant}
                 size="medium"
-                icon={<Icon name={action.icon} />}
+                icon={<Icon name={action.icon} strokeWidth={1.5} />}
                 onClick={action.onClick}
-                className="toolbar-action"
+                className="toolbar-action toolbar-action--icon-only"
                 loading={action.id === 'run' && isExecuting}
+                aria-label={action.label}
               />
             </Tooltip>
           ))}
@@ -306,17 +350,38 @@ export const FloatingToolbar = ({
         {/* Separator */}
         <div className="floating-toolbar__separator"></div>
 
-        {/* Secondary Actions Menu */}
+        {/* Secondary Actions Menu - Solo iconos */}
         <div className="floating-toolbar__secondary">
           <Tooltip content={t('toolbar.moreActions')} placement="top">
             <Button
               variant="ghost"
               size="medium"
-              icon={<Icon name="more" />}
+              icon={<Icon name="more" strokeWidth={1.5} />}
               onClick={() => setActiveMenu(activeMenu === 'secondary' ? null : 'secondary')}
-              className="toolbar-action"
+              className="toolbar-action toolbar-action--icon-only"
+              aria-label={t('toolbar.moreActions')}
             />
           </Tooltip>
+
+          {/* Language Submenu */}
+          {activeMenu === 'language' && (
+            <div className="floating-toolbar__dropdown language-dropdown">
+              <div className="dropdown-header">{t('toolbar.language')}</div>
+              {availableLanguages.map((lang) => (
+                <button
+                  key={lang.code}
+                  className={`dropdown-item ${currentLanguage === lang.code ? 'active' : ''}`}
+                  onClick={() => handleChangeLanguage(lang.code)}
+                >
+                  <Icon name="language" size="small" strokeWidth={1.5} />
+                  <span className="dropdown-item__label">{lang.nativeName}</span>
+                  {currentLanguage === lang.code && (
+                    <Icon name="check" size="small" strokeWidth={1.5} className="dropdown-item__check" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Dropdown Menu */}
           {activeMenu === 'secondary' && (
@@ -330,10 +395,13 @@ export const FloatingToolbar = ({
                     className="dropdown-item"
                     onClick={action.onClick}
                   >
-                    <Icon name={action.icon} size="small" />
+                    <Icon name={action.icon} size="small" strokeWidth={1.5} />
                     <span className="dropdown-item__label">{action.label}</span>
                     {action.shortcut && (
                       <span className="dropdown-item__shortcut">{action.shortcut}</span>
+                    )}
+                    {action.hasSubmenu && (
+                      <Icon name="chevron-right" size="small" strokeWidth={1.5} className="dropdown-item__arrow" />
                     )}
                   </button>
                 )
@@ -342,15 +410,16 @@ export const FloatingToolbar = ({
           )}
         </div>
 
-        {/* Collapse Toggle */}
+        {/* Collapse Toggle - Solo icono */}
         <div className="floating-toolbar__toggle">
           <Tooltip content={isCollapsed ? t('toolbar.expand') : t('toolbar.collapse')} placement="top">
             <Button
               variant="ghost"
               size="small"
-              icon={<Icon name={isCollapsed ? 'expand' : 'collapse'} />}
+              icon={<Icon name={isCollapsed ? 'expand' : 'collapse'} strokeWidth={1.5} />}
               onClick={onToggle}
-              className="toolbar-action"
+              className="toolbar-action toolbar-action--icon-only"
+              aria-label={isCollapsed ? t('toolbar.expand') : t('toolbar.collapse')}
             />
           </Tooltip>
         </div>

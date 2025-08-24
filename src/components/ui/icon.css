@@ -231,3 +231,46 @@
 .ui-icon-group .ui-icon {
   flex-shrink: 0;
 }
+
+/* Lucide React specific styles */
+.ui-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Override stroke-width for Lucide icons in toolbar */
+.toolbar-action .ui-icon svg {
+  stroke-width: 1.5;
+}
+
+.toolbar-action--icon-only .ui-icon svg {
+  stroke-width: 1.5;
+  transition: all var(--transition-fast);
+}
+
+/* Hover effects for Lucide icons */
+.toolbar-action:hover .ui-icon svg {
+  stroke-width: 2;
+}
+
+/* Ensure proper sizing for Lucide icons */
+.ui-icon--small svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ui-icon--medium svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ui-icon--large svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Loading state for Lucide icons */
+.ui-icon--spinning svg {
+  animation: ui-icon-spin 1s linear infinite;
+}
