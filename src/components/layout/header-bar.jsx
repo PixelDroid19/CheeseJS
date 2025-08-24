@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from './theme-provider.jsx';
-import { i18nService } from '../../services/i18n-service.js';
-import { eventBus } from '../../utils/event-bus.js';
+import { useI18n } from '../../hooks/use-i18n.js';
+import { useExecution } from '../../hooks/use-execution.js';
+import { useEventGroup } from '../../hooks/use-event-manager.js';
 import './header-bar.css';
 
 /**
- * Header Bar Component
+ * Header Bar Component - Refactorizado
  * Barra de encabezado con navegación y controles principales
+ * Usa los nuevos hooks para eliminar duplicación de código
  */
 export const HeaderBar = ({ 
   onToggleSidebar, 
@@ -15,64 +17,37 @@ export const HeaderBar = ({
   showConsole 
 }) => {
   const { currentTheme, toggleTheme, availableThemes } = useTheme();
-  const [currentLanguage, setCurrentLanguage] = useState('es');
-  const [availableLanguages, setAvailableLanguages] = useState([]);
-  const [isExecuting, setIsExecuting] = useState(false);
+  const { currentLanguage, availableLanguages, changeLanguage, t, isReady: i18nReady } = useI18n();
+  const { isExecuting, executeCode, stopExecution, canExecute, canStop } = useExecution();
+  
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
-  const [t, setT] = useState(() => (key, params) => key);
+
+  // Usar EventManager para eventos del header
+  const { emit } = useEventGroup('header-bar', 'UI_BASIC', {
+    languageChanged: (data) => {
+      console.log('🌍 Idioma cambiado en HeaderBar:', data);
+    },
+    themeChanged: (data) => {
+      console.log('🎨 Tema cambiado en HeaderBar:', data);
+    }
+  }, []);
 
   useEffect(() => {
-    // Inicializar i18n
-    const initializeI18n = async () => {
-      await i18nService.initialize();
-      setCurrentLanguage(i18nService.getCurrentLanguage());
-      setAvailableLanguages(i18nService.getAvailableLanguages());
-      setT(() => (key, params) => i18nService.t(key, params));
-    };
-
-    initializeI18n();
-
-    // Suscribirse a eventos
-    const unsubscribeLanguageChanged = eventBus.subscribe('i18n:language-changed', (data) => {
-      setCurrentLanguage(data.to);
-      setT(() => (key, params) => i18nService.t(key, params));
-    });
-
-    const unsubscribeExecutionStarted = eventBus.subscribe('execution:started', () => {
-      setIsExecuting(true);
-    });
-
-    const unsubscribeExecutionCompleted = eventBus.subscribe('execution:completed', () => {
-      setIsExecuting(false);
-    });
-
-    const unsubscribeExecutionError = eventBus.subscribe('execution:error', () => {
-      setIsExecuting(false);
-    });
-
-    const unsubscribeExecutionStopped = eventBus.subscribe('execution:stopped', () => {
-      setIsExecuting(false);
-    });
-
-    return () => {
-      unsubscribeLanguageChanged();
-      unsubscribeExecutionStarted();
-      unsubscribeExecutionCompleted();
-      unsubscribeExecutionError();
-      unsubscribeExecutionStopped();
-    };
-  }, []);
+    // El hook useI18n ya maneja la inicialización
+    // No necesitamos duplicar la lógica aquí
+    console.log('🚀 HeaderBar inicializado con nuevos hooks');
+  }, [i18nReady]);
 
   /**
    * Manejar ejecución de código
    */
   const handleRunCode = () => {
-    if (isExecuting) {
-      eventBus.emit('code:stop-requested');
-    } else {
-      eventBus.emit('code:run-requested');
+    if (canStop) {
+      stopExecution();
+    } else if (canExecute) {
+      emit('code:run-requested'); // Emitir evento para que Monaco maneje
     }
   };
 
@@ -80,14 +55,14 @@ export const HeaderBar = ({
    * Manejar instalación de paquetes
    */
   const handleInstallPackage = () => {
-    eventBus.emit('package:install-dialog-requested');
+    emit('package:install-dialog-requested');
   };
 
   /**
    * Cambiar idioma
    */
   const handleLanguageChange = async (languageCode) => {
-    await i18nService.setLanguage(languageCode);
+    await changeLanguage(languageCode);
     setShowLanguageMenu(false);
   };
 
@@ -104,7 +79,7 @@ export const HeaderBar = ({
    * Abrir configuración
    */
   const handleOpenSettings = () => {
-    eventBus.emit('settings:dialog-requested');
+    emit('settings:dialog-requested');
     setShowSettingsMenu(false);
   };
 
@@ -135,7 +110,7 @@ export const HeaderBar = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isExecuting]);
+  }, [canExecute, canStop]); // Dependencias actualizadas
 
   /**
    * Cerrar menús al hacer clic fuera

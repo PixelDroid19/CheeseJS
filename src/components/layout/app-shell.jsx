@@ -191,8 +191,7 @@ const AppShellContent = ({ children }) => {
       
       {/* Main Layout Container */}
       <div className="app-main" style={{
-        gridTemplateColumns: showSidebar ? `${sidebarWidth}px 4px 1fr` : '1fr',
-        gridTemplateRows: showConsole ? `1fr 4px ${consoleHeight}px` : '1fr'
+        gridTemplateColumns: showSidebar ? `${sidebarWidth}px 4px 1fr` : '1fr'
       }}>
         {/* Sidebar Panel */}
         {showSidebar && (
@@ -209,7 +208,9 @@ const AppShellContent = ({ children }) => {
         )}
         
         {/* Main Content Area */}
-        <div className="content-area">
+        <div className="content-area" style={{
+          gridTemplateRows: showConsole ? `1fr 4px ${consoleHeight}px` : '1fr'
+        }}>
           {/* Editor Panel (children) */}
           <div className="editor-container">
             {children}

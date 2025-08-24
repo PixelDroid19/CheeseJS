@@ -1,8 +1,4 @@
-import WebContainerManager from './webcontainer-manager.js';
-import PackageManager from './package-manager.js';
-import CodeExecutor from './code-executor.js';
-import SandboxManager from './sandbox-manager.js';
-import TerminalManager from './terminal-manager.js';
+import WebContainerService from './webcontainer-service.js';
 import { themeService } from '../services/theme-service.js';
 import { i18nService } from '../services/i18n-service.js';
 import { configService } from '../services/config-service.js';
@@ -15,13 +11,10 @@ import initialFiles from '../utils/initial-files.js';
  */
 class CheeseJSCore {
   constructor() {
-    this.webContainerManager = null;
-    this.packageManager = null;
-    this.codeExecutor = null;
-    this.sandboxManager = null;
-    this.terminalManager = null;
+    this.webContainerService = null;
     this.isInitialized = false;
     this.initializationPromise = null;
+    this._initStartTime = Date.now();
   }
 
   /**
@@ -93,27 +86,11 @@ class CheeseJSCore {
    * Inicializar núcleo modular
    */
   async _initializeCore() {
-    console.log('🔥 Inicializando núcleo modular...');
+    console.log('🔥 Inicializando núcleo unificado...');
     
-    // WebContainer Manager
-    this.webContainerManager = new WebContainerManager();
-    console.log('📦 WebContainer Manager creado');
-    
-    // Package Manager
-    this.packageManager = new PackageManager(this.webContainerManager);
-    console.log('📚 Package Manager creado');
-    
-    // Code Executor
-    this.codeExecutor = new CodeExecutor(this.webContainerManager);
-    console.log('⚡ Code Executor creado');
-    
-    // Sandbox Manager
-    this.sandboxManager = new SandboxManager(this.webContainerManager);
-    console.log('🏗️ Sandbox Manager creado');
-    
-    // Terminal Manager
-    this.terminalManager = new TerminalManager(this.webContainerManager);
-    console.log('🖥️ Terminal Manager creado');
+    // WebContainer Service (reemplaza a todos los managers)
+    this.webContainerService = new WebContainerService();
+    console.log('🚀 WebContainer Service creado');
   }
 
   /**
@@ -211,63 +188,28 @@ class CheeseJSCore {
    * Inicializar WebContainer y sandbox
    */
   async _initializeWebContainer() {
-    console.log('🚀 Inicializando WebContainer...');
+    console.log('🚀 Inicializando WebContainer Service...');
     
     try {
-      // Verificar soporte antes de inicializar
-      if (typeof window !== 'undefined') {
-        console.log('🔍 Verificando soporte de WebContainer...');
-        console.log('- User Agent:', navigator.userAgent);
-        console.log('- Headers COOP/COEP configurados en Vite');
-        
-        // Verificar si estamos en un contexto seguro
-        if (!window.isSecureContext) {
-          console.warn('⚠️ Advertencia: No estamos en un contexto seguro (HTTPS)');
-        }
-      }
+      // Inicializar el servicio unificado
+      await this.webContainerService.initialize(initialFiles);
       
-      // Inicializar WebContainer
-      await this.webContainerManager.boot();
-      
-      // Emitir evento de WebContainer listo antes de montar archivos
+      // Emitir eventos de compatibilidad
       eventBus.emit('webcontainer:ready', { timestamp: Date.now() });
-      console.log('✅ WebContainer inicializado exitosamente');
-      
-      // Inicializar sandbox
-      console.log('🏗️ Inicializando sandbox...');
-      await this.sandboxManager.initialize(initialFiles);
-      console.log('✅ Sandbox inicializado exitosamente');
-      
-      // Configurar monitoreo de recursos
-      this.sandboxManager.startResourceMonitoring();
-      
-      console.log('🚀 WebContainer y sandbox inicializados completamente');
-      
-      // Emitir evento final de inicialización completa
       eventBus.emit('cheesejs:webcontainer-ready', { 
         timestamp: Date.now(),
         components: this._getComponentStatus()
       });
       
-    } catch (error) {
-      console.error('❌ Error crítico inicializando WebContainer:', error);
+      console.log('🚀 WebContainer Service inicializado completamente');
       
-      // Emitir evento de error para que la UI pueda mostrar un mensaje
+    } catch (error) {
+      console.error('❌ Error crítico inicializando WebContainer Service:', error);
+      
       eventBus.emit('cheesejs:webcontainer-error', { 
         error: error.message,
         timestamp: Date.now()
       });
-      
-      // Información de diagnóstico
-      console.error('🔍 Información de diagnóstico:');
-      console.error('- Error:', error.message);
-      console.error('- Stack:', error.stack);
-      
-      if (typeof window !== 'undefined') {
-        console.error('- Contexto seguro:', window.isSecureContext);
-        console.error('- Protocolo:', window.location.protocol);
-        console.error('- Host:', window.location.host);
-      }
       
       throw error;
     }
@@ -281,7 +223,7 @@ class CheeseJSCore {
       throw new Error('CheeseJS Core no está inicializado');
     }
 
-    return await this.codeExecutor.executeCode(code, options);
+    return await this.webContainerService.executeCode(code, options);
   }
 
   /**
@@ -290,7 +232,7 @@ class CheeseJSCore {
   async stopExecution() {
     if (!this.isInitialized) return;
     
-    await this.codeExecutor.stopExecution();
+    await this.webContainerService.stopExecution();
   }
 
   /**
@@ -301,7 +243,7 @@ class CheeseJSCore {
       throw new Error('CheeseJS Core no está inicializado');
     }
 
-    return await this.packageManager.installPackage(packageName, version);
+    return await this.webContainerService.installPackage(packageName, version);
   }
 
   /**
@@ -312,7 +254,7 @@ class CheeseJSCore {
       throw new Error('CheeseJS Core no está inicializado');
     }
 
-    return await this.packageManager.uninstallPackage(packageName);
+    return await this.webContainerService.uninstallPackage(packageName);
   }
 
   /**
@@ -323,7 +265,7 @@ class CheeseJSCore {
       throw new Error('CheeseJS Core no está inicializado');
     }
 
-    return await this.packageManager.listInstalled();
+    return await this.webContainerService.listInstalledPackages();
   }
 
   /**
@@ -334,7 +276,7 @@ class CheeseJSCore {
       throw new Error('CheeseJS Core no está inicializado');
     }
 
-    await this.webContainerManager.writeFile(path, content);
+    await this.webContainerService.writeFile(path, content);
   }
 
   /**
@@ -345,7 +287,7 @@ class CheeseJSCore {
       throw new Error('CheeseJS Core no está inicializado');
     }
 
-    return await this.webContainerManager.readFile(path);
+    return await this.webContainerService.readFile(path);
   }
 
   /**
@@ -353,11 +295,9 @@ class CheeseJSCore {
    */
   _getComponentStatus() {
     return {
-      webContainerManager: !!this.webContainerManager?.isWebContainerReady(),
-      packageManager: !!this.packageManager,
-      codeExecutor: !!this.codeExecutor,
-      sandboxManager: !!this.sandboxManager?.isSandboxInitialized(),
-      terminalManager: !!this.terminalManager?.isTerminalReady(),
+      webContainerService: !!this.webContainerService?.isWebContainerReady(),
+      sandbox: !!this.webContainerService?.isSandboxInitialized(),
+      terminal: !!this.webContainerService?.isTerminalServiceReady(),
       configService: !!configService,
       i18nService: !!i18nService,
       themeService: !!themeService
@@ -374,8 +314,8 @@ class CheeseJSCore {
 
     try {
       const [resourceUsage, installedPackages] = await Promise.all([
-        this.sandboxManager.getResourceUsage(),
-        this.packageManager.listInstalled()
+        this.webContainerService.getResourceUsage(),
+        this.webContainerService.listInstalledPackages()
       ]);
 
       return {
@@ -386,7 +326,7 @@ class CheeseJSCore {
         installedPackages: Array.isArray(installedPackages) ? 
           installedPackages.length : 
           Object.keys(installedPackages || {}).length,
-        uptime: Date.now() - (this._initStartTime || Date.now())
+        uptime: Date.now() - this._initStartTime
       };
     } catch (error) {
       return {
@@ -407,16 +347,8 @@ class CheeseJSCore {
 
     console.log('🔄 Reiniciando sandbox...');
     
-    // Detener ejecución actual
-    await this.stopExecution();
+    await this.webContainerService.resetSandbox();
     
-    // Reiniciar sandbox
-    await this.sandboxManager.reset();
-    
-    // Limpiar lista de paquetes instalados
-    this.packageManager.clearInstalledPackages();
-    
-    eventBus.emit('sandbox:reset', { timestamp: Date.now() });
     console.log('🔄 Sandbox reiniciado');
   }
 
@@ -429,12 +361,9 @@ class CheeseJSCore {
     console.log('🧹 Destruyendo CheeseJS Core...');
     
     try {
-      // Detener ejecución
-      await this.stopExecution();
-      
-      // Limpiar sandbox
-      if (this.sandboxManager) {
-        this.sandboxManager.destroy();
+      // Destruir servicio unificado
+      if (this.webContainerService) {
+        await this.webContainerService.destroy();
       }
       
       // Limpiar event listeners
@@ -456,15 +385,13 @@ class CheeseJSCore {
   }
 
   /**
-   * Obtener instancias de componentes (para debugging)
+   * Obtener instancias de componentes (para debugging y compatibilidad)
    */
   getComponents() {
     return {
-      webContainerManager: this.webContainerManager,
-      packageManager: this.packageManager,
-      codeExecutor: this.codeExecutor,
-      sandboxManager: this.sandboxManager,
-      terminalManager: this.terminalManager
+      webContainerService: this.webContainerService,
+      // Para compatibilidad con hook useTerminal
+      terminalManager: this.webContainerService
     };
   }
 }

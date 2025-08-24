@@ -13,16 +13,29 @@ export const OutputEditor = () => {
   const monacoRef = useRef(null);
   const { currentTheme, isDarkTheme, themeVariables } = useTheme();
   
-  const [output, setOutput] = useState(`// 🧀 CheeseJS - Salida del Código
+  // Utilidades para limpiar y formatear salida
+  const ANSI_REGEX = /[\u001B\u009B][[\]()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+  const stripAnsi = (text) => typeof text === 'string' ? text.replace(ANSI_REGEX, '') : text;
+  const mapTokenToType = (token) => {
+    switch (token) {
+      case 'LOG': return 'log';
+      case 'ERROR': return 'error';
+      case 'WARN': return 'warn';
+      case 'INFO': return 'info';
+      default: return 'info';
+    }
+  };
+
+  const [output, setOutput] = useState(`// CheeseJS - Salida del Código
 // Los resultados de tu código aparecerán aquí
 
-🔥 Esperando ejecución de código...
-📝 Presiona Ctrl+Enter en el editor para ejecutar
-⚡ Los console.log() y resultados se mostrarán aquí
+Esperando ejecución de código...
+Presiona Ctrl+Enter en el editor para ejecutar
+Los console.log() y resultados se mostrarán aquí
 
 // Ejemplo de salida:
-// > console.log('¡Hola CheeseJS! 🧀');
-// ¡Hola CheeseJS! 🧀
+// > console.log('¡Hola CheeseJS!');
+// ¡Hola CheeseJS!
 //
 // > const suma = 5 + 3;
 // > console.log('Resultado:', suma);
@@ -36,7 +49,7 @@ export const OutputEditor = () => {
     // Suscribirse a eventos de ejecución
     const unsubscribeExecutionStarted = eventBus.subscribe('execution:started', (data) => {
       setIsExecuting(true);
-      setOutput('// 🔄 Ejecutando código...\n// Por favor espera...\n\n');
+      setOutput('// Ejecutando código...\n// Por favor espera...\n\n');
       setLastExecution(new Date());
     });
 
@@ -46,13 +59,13 @@ export const OutputEditor = () => {
 
     const unsubscribeExecutionCompleted = eventBus.subscribe('execution:completed', (data) => {
       setIsExecuting(false);
-      const executionTime = data.result?.executionTime || 0;
-      appendToOutput(`\n// ✅ Ejecución completada en ${executionTime}ms\n// Código: ${data.result?.exitCode || 0}`, 'info');
+      const exitCode = data.result?.exitCode ?? 0;
+      appendToOutput(`\n// Ejecución completada\n// Código: ${exitCode}`,'info');
     });
 
     const unsubscribeExecutionError = eventBus.subscribe('execution:error', (data) => {
       setIsExecuting(false);
-      appendToOutput(`\n// ❌ Error de ejecución:\n// ${data.error}\n`, 'error');
+      appendToOutput(`\n// Error de ejecución:\n// ${data.error}\n`, 'error');
     });
 
     const unsubscribeCodeChanged = eventBus.subscribe('code:changed', () => {
@@ -64,15 +77,15 @@ export const OutputEditor = () => {
 
     // Agregar eventos personalizados para capturar console.log
     const unsubscribeConsoleLog = eventBus.subscribe('console:log', (data) => {
-      appendToOutput(`> ${data.message}`, 'log');
+      appendToOutput(`${data.message}`, 'log');
     });
 
     const unsubscribeConsoleError = eventBus.subscribe('console:error', (data) => {
-      appendToOutput(`❌ ${data.message}`, 'error');
+      appendToOutput(`${data.message}`, 'error');
     });
 
     const unsubscribeConsoleWarn = eventBus.subscribe('console:warn', (data) => {
-      appendToOutput(`⚠️ ${data.message}`, 'warn');
+      appendToOutput(`${data.message}`, 'warn');
     });
 
     return () => {
@@ -92,33 +105,54 @@ export const OutputEditor = () => {
    */
   const appendToOutput = (newContent, type = 'info') => {
     setOutput(prevOutput => {
-      const timestamp = new Date().toLocaleTimeString();
       let formattedContent = newContent;
       
       // Formatear según el tipo
       switch (type) {
         case 'error':
-          formattedContent = `[${timestamp}] ❌ ERROR: ${newContent}`;
+          formattedContent = `ERROR: ${stripAnsi(newContent)}`;
           break;
         case 'warn':
-          formattedContent = `[${timestamp}] ⚠️  WARN: ${newContent}`;
+          formattedContent = `WARN: ${stripAnsi(newContent)}`;
           break;
         case 'log':
-          formattedContent = `[${timestamp}] 📝 ${newContent}`;
+          formattedContent = `${stripAnsi(newContent)}`;
           break;
         case 'info':
-          formattedContent = `[${timestamp}] ℹ️  ${newContent}`;
+          formattedContent = `${stripAnsi(newContent)}`;
           break;
         case 'stdout':
-          formattedContent = newContent; // Salida raw del proceso
+          // Procesar salida de ejecución: quitar ANSI y mapear tokens [LOG]/[ERROR]/...
+          const clean = stripAnsi(newContent);
+          const lines = clean.split(/\r?\n/).filter(l => l.trim().length > 0);
+          if (lines.length > 0) {
+            const formattedLines = lines.map(line => {
+              const match = line.match(/^\[(LOG|ERROR|WARN|INFO)\]\s*(.*)$/);
+              if (match) {
+                const mappedType = mapTokenToType(match[1]);
+                const message = match[2];
+                if (mappedType === 'error') return `ERROR: ${message}`;
+                if (mappedType === 'warn') return `WARN: ${message}`;
+                return `${message}`;
+              }
+              return `${line}`;
+            });
+            formattedContent = formattedLines.join('\n');
+          } else {
+            formattedContent = '';
+          }
           break;
         case 'stderr':
-          formattedContent = `❌ ${newContent}`;
+          formattedContent = `ERROR: ${stripAnsi(newContent)}`;
           break;
         default:
-          formattedContent = `[${timestamp}] ${newContent}`;
+          formattedContent = `${stripAnsi(newContent)}`;
       }
       
+      // Evitar agregar líneas vacías
+      if (!formattedContent) {
+        return prevOutput;
+      }
       return prevOutput + '\n' + formattedContent;
     });
 
