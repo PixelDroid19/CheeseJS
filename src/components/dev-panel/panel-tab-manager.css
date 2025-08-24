@@ -1,0 +1,293 @@
+/* Panel Tab Manager Styles */
+.panel-tab-manager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--surface-variant);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Tabs Container */
+.tabs-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+  position: relative;
+}
+
+.tabs-list {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Panel Tab */
+.panel-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  position: relative;
+  min-width: 0;
+  user-select: none;
+}
+
+.panel-tab:hover:not(.disabled) {
+  color: var(--text-color);
+  background-color: var(--sidebar-hover);
+}
+
+.panel-tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+  background-color: var(--surface-color);
+  font-weight: 600;
+}
+
+.panel-tab.disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.panel-tab.has-notifications {
+  animation: subtle-pulse 2s infinite;
+}
+
+/* Panel Tab Elements */
+.panel-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.panel-name {
+  font-size: 0.75rem;
+  font-weight: inherit;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.panel-count {
+  background-color: var(--secondary-color);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.panel-tab.active .panel-count {
+  background-color: var(--primary-color);
+}
+
+.panel-status {
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+.panel-status.disabled {
+  opacity: 0.5;
+}
+
+.panel-status.active {
+  color: var(--primary-color);
+}
+
+/* Active Tab Indicator */
+.active-tab-indicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background-color: var(--primary-color);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+/* Panel Actions */
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+}
+
+.action-btn:hover {
+  background-color: var(--sidebar-hover);
+  color: var(--text-color);
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+/* Tooltips */
+.panel-tab[title]:hover::after,
+.action-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background-color: var(--surface-color);
+  color: var(--text-color);
+  font-size: 0.75rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1000;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  animation: tooltip-fade-in 0.2s ease;
+}
+
+/* Animations */
+@keyframes subtle-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .panel-tab {
+    padding: 8px 12px;
+    gap: 4px;
+  }
+  
+  .panel-name {
+    display: none;
+  }
+  
+  .panel-icon {
+    font-size: 1rem;
+  }
+  
+  .panel-actions {
+    padding: 0 4px;
+  }
+  
+  .action-btn {
+    min-width: 24px;
+    min-height: 24px;
+    padding: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .panel-tab {
+    padding: 6px 8px;
+  }
+  
+  .panel-count {
+    font-size: 0.65rem;
+    padding: 1px 4px;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .panel-tab.active {
+    border-bottom-width: 3px;
+    font-weight: 700;
+  }
+  
+  .action-btn {
+    border: 1px solid transparent;
+  }
+  
+  .action-btn:hover {
+    border-color: var(--text-color);
+  }
+}
+
+/* Focus Management */
+.panel-tab:focus-visible,
+.action-btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
+  border-radius: 2px;
+}
+
+/* Dark Theme Specific */
+.dev-panel[data-theme="dark"] .panel-tab {
+  color: #8c8c8c;
+}
+
+.dev-panel[data-theme="dark"] .panel-tab:hover:not(.disabled) {
+  color: #ffffff;
+  background-color: #2a2d2e;
+}
+
+.dev-panel[data-theme="dark"] .panel-tab.active {
+  color: #0078d4;
+  background-color: #1e1e1e;
+}
+
+/* Light Theme Specific */
+.dev-panel[data-theme="light"] .panel-tab {
+  color: #6a737d;
+}
+
+.dev-panel[data-theme="light"] .panel-tab:hover:not(.disabled) {
+  color: #24292e;
+  background-color: #f1f8ff;
+}
+
+.dev-panel[data-theme="light"] .panel-tab.active {
+  color: #0366d6;
+  background-color: #ffffff;
+}

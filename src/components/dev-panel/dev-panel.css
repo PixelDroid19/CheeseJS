@@ -1,0 +1,223 @@
+/* DevPanel Styles */
+.dev-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--surface-color);
+  border-top: 1px solid var(--border-color);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dev-panel[data-theme="dark"] {
+  --panel-background: #1e1e1e;
+  --panel-surface: #252526;
+  --panel-border: #3c3c3c;
+  --panel-text: #cccccc;
+  --panel-text-muted: #808080;
+}
+
+.dev-panel[data-theme="light"] {
+  --panel-background: #ffffff;
+  --panel-surface: #f3f3f3;
+  --panel-border: #e1e4e8;
+  --panel-text: #333333;
+  --panel-text-muted: #6a737d;
+}
+
+/* Loading State */
+.dev-panel-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: var(--surface-color);
+  color: var(--text-muted);
+}
+
+.loading-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  display: block;
+  animation: pulse 2s infinite;
+}
+
+.loading-content p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Panel Content */
+.dev-panel-content {
+  flex: 1;
+  overflow: hidden;
+  background-color: var(--panel-background, var(--console-background));
+}
+
+/* Common Panel Styles */
+.panel-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: var(--panel-surface, var(--surface-variant));
+  border-bottom: 1px solid var(--panel-border, var(--border-color));
+  flex-shrink: 0;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.panel-footer {
+  padding: 8px 12px;
+  background-color: var(--panel-surface, var(--surface-variant));
+  border-top: 1px solid var(--panel-border, var(--border-color));
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--panel-text-muted, var(--text-muted));
+}
+
+/* Empty States */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  color: var(--panel-text-muted, var(--text-muted));
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+
+.empty-state p {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+  color: var(--panel-text, var(--text-color));
+}
+
+.empty-state small {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+/* Coming Soon */
+.coming-soon {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: var(--panel-surface, var(--surface-variant));
+  border-radius: 8px;
+  text-align: left;
+  max-width: 300px;
+}
+
+.coming-soon h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--panel-text, var(--text-color));
+}
+
+.coming-soon ul {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.coming-soon li {
+  margin-bottom: 0.25rem;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Scrollbar Styling */
+.panel-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.panel-content::-webkit-scrollbar-track {
+  background: var(--panel-surface, var(--surface-color));
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+  background: var(--panel-text-muted, var(--text-muted));
+  border-radius: 4px;
+}
+
+.panel-content::-webkit-scrollbar-thumb:hover {
+  background: var(--panel-text, var(--text-secondary));
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .panel-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  
+  .empty-state {
+    padding: 1rem;
+  }
+  
+  .empty-icon {
+    font-size: 2rem;
+  }
+  
+  .coming-soon {
+    max-width: none;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .dev-panel {
+    border-top: 2px solid var(--panel-text, var(--text-color));
+  }
+  
+  .panel-header,
+  .panel-footer {
+    border-color: var(--panel-text, var(--text-color));
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .loading-icon,
+  .panel-content {
+    animation: none;
+    transition: none;
+  }
+}

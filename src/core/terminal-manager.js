@@ -302,7 +302,17 @@ class TerminalManager {
             const { done, value } = await reader.read();
             if (done) break;
             
-            const output = new TextDecoder().decode(value);
+            // Verificar que value sea un ArrayBuffer o Uint8Array
+            let output = '';
+            if (value instanceof Uint8Array || value instanceof ArrayBuffer) {
+              output = new TextDecoder().decode(value);
+            } else if (typeof value === 'string') {
+              output = value;
+            } else {
+              console.warn('Tipo de dato inesperado en stream:', typeof value, value);
+              output = String(value);
+            }
+            
             eventBus.emit('terminal:output', {
               type: 'stdout',
               data: output

@@ -5,11 +5,14 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+  min-height: 0;
   background-color: var(--terminal-background, var(--surface-color));
   border: 1px solid var(--border-color);
   border-radius: 4px;
   overflow: hidden;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Liberation Mono', monospace;
+  box-sizing: border-box;
 }
 
 /* Terminal Header */
@@ -78,10 +81,14 @@
 /* Terminal Content */
 .terminal-content {
   flex: 1;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
   padding: 8px;
   background-color: var(--terminal-background, #1e1e1e);
   overflow: hidden;
   position: relative;
+  box-sizing: border-box;
 }
 
 /* Xterm.js overrides */

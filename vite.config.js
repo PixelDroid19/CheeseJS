@@ -13,10 +13,10 @@ export default defineConfig(async () => ({
   clearScreen: false,
   // 2. tauri expects a fixed port, fail if that port is not available
   server: {
-    port: 1420,
-    strictPort: true,
+    port: host ? 1420 : 3000, // Puerto 3000 para desarrollo normal, 1420 para Tauri
+    strictPort: false, // Permitir puerto alternativo en desarrollo normal
     host: host || false,
-    // Headers requeridos para WebContainers
+    // Headers requeridos para WebContainers (aplicados siempre)
     headers: {
       "Cross-Origin-Embedder-Policy": "require-corp",
       "Cross-Origin-Opener-Policy": "same-origin",

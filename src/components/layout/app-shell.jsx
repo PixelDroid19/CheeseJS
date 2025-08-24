@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from './theme-provider.jsx';
 import { HeaderBar } from './header-bar.jsx';
 import { SidebarPanel } from './sidebar-panel.jsx';
-import { ConsolePanel } from '../console/console-panel.jsx';
+import { DevPanel } from '../dev-panel/dev-panel.jsx';
 import { useTheme } from './theme-provider.jsx';
 import { configService } from '../../services/config-service.js';
 import { eventBus } from '../../utils/event-bus.js';
@@ -17,7 +17,7 @@ const AppShellContent = ({ children }) => {
   const [showSidebar, setShowSidebar] = useState(true);
   const [showConsole, setShowConsole] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(250);
-  const [consoleHeight, setConsoleHeight] = useState(200);
+  const [consoleHeight, setConsoleHeight] = useState(300);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeType, setResizeType] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -32,7 +32,7 @@ const AppShellContent = ({ children }) => {
         setShowSidebar(configService.get('layout.showSidebar', true));
         setShowConsole(configService.get('layout.showConsole', true));
         setSidebarWidth(configService.get('layout.sidebarWidth', 250));
-        setConsoleHeight(configService.get('layout.consoleHeight', 200));
+        setConsoleHeight(configService.get('layout.consoleHeight', 300));
         
         setIsInitialized(true);
         console.log('🏗️ App Shell inicializado');
@@ -230,7 +230,7 @@ const AppShellContent = ({ children }) => {
               className="console-container"
               style={{ height: `${consoleHeight}px` }}
             >
-              <ConsolePanel />
+              <DevPanel />
             </div>
           )}
         </div>

@@ -271,7 +271,7 @@ export const OutputEditor = () => {
         </div>
       </div>
 
-      <div className="output-wrapper">
+      <div className="output-content">
         <Editor
           height="100%"
           defaultLanguage="javascript"

@@ -1,0 +1,29 @@
+/* Shared styles for problems and debug panels */
+
+/* Problems Panel Specific */
+.problems-panel .filter-btn span {
+  margin-left: 4px;
+  text-transform: capitalize;
+}
+
+/* Debug Panel Specific */
+.debug-log.info {
+  color: var(--text-color);
+}
+
+.debug-log.warn {
+  color: #ff8c00;
+}
+
+.debug-log.error {
+  color: #d13438;
+}
+
+.log-timestamp {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.log-message {
+  color: var(--text-color);
+}

@@ -2,16 +2,16 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
-import { useTheme } from '../layout/theme-provider.jsx';
-import { eventBus } from '../../utils/event-bus.js';
-import './terminal.css';
+import { useTheme } from '../../layout/theme-provider.jsx';
+import { eventBus } from '../../../utils/event-bus.js';
+import { cheeseJSCore } from '../../../core/cheesejs-core.js';
+import './terminal-panel.css';
 
 /**
- * Terminal Component
- * Terminal interactiva usando xterm.js integrada con WebContainer
- * Basado en la implementación funcional de debug-terminal.html
+ * TerminalPanel - Panel de terminal interactiva
+ * Panel modular para terminal con WebContainer
  */
-export const Terminal = () => {
+export const TerminalPanel = ({ panelId, state, updateState, isActive }) => {
   const terminalRef = useRef(null);
   const xtermRef = useRef(null);
   const fitAddonRef = useRef(null);
@@ -20,27 +20,90 @@ export const Terminal = () => {
   
   const [isConnected, setIsConnected] = useState(false);
   const [terminalReady, setTerminalReady] = useState(false);
+  // --- refs para evitar cierres obsoletos y capturar eventos tempranos ---
+  const terminalReadyRef = useRef(false);
+  const cheeseJSCoreRef = useRef(null);
   const [commandHistory, setCommandHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [currentInput, setCurrentInput] = useState('');
-  const [commandsCount, setCommandsCount] = useState(0);
-  const [cheeseJSCore, setCheeseJSCore] = useState(null);
-  // --- FIX: refs para evitar cierres obsoletos ---
-  const terminalReadyRef = useRef(false);
-  const cheeseJSCoreRef = useRef(null);
+  const [cheeseJSCoreInstance, setCheeseJSCoreInstance] = useState(null);
+
+  // Mantener refs sincronizadas con el estado actual
+  useEffect(() => { terminalReadyRef.current = terminalReady; }, [terminalReady]);
+  useEffect(() => { cheeseJSCoreRef.current = cheeseJSCoreInstance; }, [cheeseJSCoreInstance]);
 
   useEffect(() => {
-    initializeTerminal();
-    initializeCheeseJSCore();
+    if (isActive && !xtermRef.current) {
+      setTimeout(initializeTerminal, 200);
+    }
+    
+    // Configurar eventos siguiendo el patrón del debug-terminal.html
+    const unsubscribeWebContainerReady = eventBus.subscribe('cheesejs:webcontainer-ready', () => {
+      setTerminalReady(true);
+      terminalReadyRef.current = true;
+      setIsConnected(true);
+      
+      if (xtermRef.current) {
+        xtermRef.current.writeln('\x1b[32m✅ Terminal listo para usar\x1b[0m');
+        xtermRef.current.writeln('Terminal inicializado correctamente');
+        xtermRef.current.writeln('Puedes ejecutar comandos básicos');
+        xtermRef.current.write('\x1b[32m$\x1b[0m ');
+      }
+      
+      console.log('🖥️ Terminal Panel conectada a WebContainer');
+    });
+    
+    const unsubscribeWebContainerError = eventBus.subscribe('cheesejs:webcontainer-error', (data) => {
+      console.error('❌ Error de WebContainer:', data.error);
+      if (xtermRef.current) {
+        xtermRef.current.writeln(`\x1b[31m❌ Error: ${data.error}\x1b[0m`);
+      }
+    });
+    
+    const unsubscribeTerminalOutput = eventBus.subscribe('terminal:output', (data) => {
+      if (xtermRef.current) {
+        if (data.type === 'error') {
+          xtermRef.current.writeln(`\x1b[31m${data.data}\x1b[0m`);
+        } else {
+          xtermRef.current.write(data.data);
+        }
+      }
+    });
+    
+    const unsubscribeTerminalReady = eventBus.subscribe('terminal:ready', () => {
+      if (xtermRef.current && terminalReady) {
+        xtermRef.current.write('\x1b[32m$\x1b[0m ');
+      }
+    });
+
+    const unsubscribeTabAction = eventBus.subscribe('devpanel:tab-action', handleTabAction);
+    const unsubscribeThemeUpdate = eventBus.subscribe('devpanel:theme-updated', handleThemeUpdate);
+
+    // Inicializar CheeseJS Core si no está inicializado
+    const initCore = async () => {
+      try {
+        if (!cheeseJSCore.isReady()) {
+          console.log('🧀 Inicializando CheeseJS Core desde terminal panel...');
+          await cheeseJSCore.initialize();
+        }
+        setCheeseJSCoreInstance(cheeseJSCore);
+      } catch (error) {
+        console.error('❌ Error inicializando CheeseJS Core:', error);
+      }
+    };
+
+    initCore();
 
     return () => {
       cleanup();
+      unsubscribeWebContainerReady();
+      unsubscribeWebContainerError();
+      unsubscribeTerminalOutput();
+      unsubscribeTerminalReady();
+      unsubscribeTabAction();
+      unsubscribeThemeUpdate();
     };
-  }, []);
-
-  // Mantener refs sincronizados con el estado actual
-  useEffect(() => { terminalReadyRef.current = terminalReady; }, [terminalReady]);
-  useEffect(() => { cheeseJSCoreRef.current = cheeseJSCore; }, [cheeseJSCore]);
+  }, [isActive]);
 
   useEffect(() => {
     if (xtermRef.current) {
@@ -49,23 +112,26 @@ export const Terminal = () => {
   }, [currentTheme]);
 
   /**
-   * Inicializar terminal xterm.js
+   * Inicializar terminal
    */
   const initializeTerminal = () => {
-    if (!terminalRef.current || xtermRef.current) return;
+    if (!terminalRef.current || xtermRef.current) {
+      console.log('🖥️ Terminal: Contenedor no disponible o terminal ya existe');
+      return;
+    }
 
-    console.log('🖥️ Inicializando Terminal...');
+    console.log('🖥️ Inicializando Terminal Panel...');
 
-    // Verificar que el contenedor tenga dimensiones válidas
     const containerRect = terminalRef.current.getBoundingClientRect();
+    console.log('🖥️ Dimensiones del contenedor:', containerRect);
+    
     if (containerRect.width === 0 || containerRect.height === 0) {
       console.log('🖥️ Contenedor sin dimensiones, reintentando...');
-      setTimeout(initializeTerminal, 100);
+      setTimeout(initializeTerminal, 300);
       return;
     }
 
     try {
-      // Crear instancia de xterm
       const xterm = new XTerm({
         theme: getTerminalTheme(),
         fontFamily: 'Monaco, Menlo, "Ubuntu Mono", Consolas, "Liberation Mono", monospace',
@@ -86,54 +152,49 @@ export const Terminal = () => {
         cols: 80
       });
 
-      // Addons
       const fitAddon = new FitAddon();
       const webLinksAddon = new WebLinksAddon();
 
       xterm.loadAddon(fitAddon);
       xterm.loadAddon(webLinksAddon);
 
-      // Abrir terminal en el DOM
       xterm.open(terminalRef.current);
+      console.log('🖥️ Terminal abierta en DOM');
 
-      // Esperar un momento antes de ajustar tamaño
       setTimeout(() => {
         try {
           fitAddon.fit();
           console.log('🖥️ Terminal ajustada al contenedor');
         } catch (error) {
           console.warn('⚠️ Error ajustando terminal:', error);
-          // Intentar con dimensiones fijas si falla
           try {
             xterm.resize(80, 24);
+            console.log('🖥️ Terminal redimensionada con valores fijos');
           } catch (e) {
             console.warn('⚠️ Error redimensionando terminal:', e);
           }
         }
 
-        // Escribir mensaje de bienvenida
-        writeWelcomeMessage(xterm);
-
-        // Configurar event handlers
-        setupTerminalHandlers(xterm);
+        writeWelcome(xterm);
+        setupHandlers(xterm);
         
-        console.log('🖥️ Terminal inicializada exitosamente');
-      }, 50);
+        console.log('🖥️ Terminal Panel inicializada exitosamente');
+        updateState({ initialized: true });
+      }, 100);
 
-      // Guardar referencias
       xtermRef.current = xterm;
       fitAddonRef.current = fitAddon;
       webLinksAddonRef.current = webLinksAddon;
 
     } catch (error) {
       console.error('❌ Error inicializando terminal:', error);
-      // Reintentar después de un momento
-      setTimeout(initializeTerminal, 500);
+      updateState({ error: error.message });
+      setTimeout(initializeTerminal, 1000);
     }
   };
 
   /**
-   * Obtener tema de la terminal basado en el tema actual
+   * Obtener tema de terminal
    */
   const getTerminalTheme = () => {
     if (isDarkTheme()) {
@@ -188,7 +249,7 @@ export const Terminal = () => {
   };
 
   /**
-   * Aplicar tema a la terminal
+   * Aplicar tema
    */
   const applyTheme = () => {
     if (xtermRef.current) {
@@ -198,21 +259,25 @@ export const Terminal = () => {
 
   /**
    * Escribir mensaje de bienvenida
-   * Actualizado para reflejar el estado correcto
    */
-  const writeWelcomeMessage = (xterm) => {
+  const writeWelcome = (xterm) => {
     xterm.writeln('\x1b[1;36m🧀 CheeseJS Terminal\x1b[0m');
     xterm.writeln('\x1b[90mTerminal interactiva integrada con WebContainer\x1b[0m');
     xterm.writeln('\x1b[90mEscribe comandos de Node.js, npm, o del sistema\x1b[0m');
     xterm.writeln('');
-    xterm.writeln('\x1b[33m⚠️  Inicializando terminal...\x1b[0m');
-    xterm.writeln('');
+    
+    if (terminalReady) {
+      xterm.write('\x1b[32m$\x1b[0m ');
+    } else {
+      xterm.writeln('\x1b[33m⚠️  Inicializando terminal...\x1b[0m');
+      xterm.writeln('');
+    }
   };
 
   /**
-   * Configurar manejadores de eventos de la terminal
+   * Configurar manejadores
    */
-  const setupTerminalHandlers = (xterm) => {
+  const setupHandlers = (xterm) => {
     let currentLine = '';
 
     xterm.onData((data) => {
@@ -234,7 +299,6 @@ export const Terminal = () => {
           setCurrentInput(currentLine);
         }
       } else if (code === 27) { // Escape sequence
-        // Manejar teclas especiales como flechas arriba/abajo para historial
         const seq = data.slice(1);
         if (seq === '[A') { // Flecha arriba
           navigateHistory(-1, xterm);
@@ -248,11 +312,10 @@ export const Terminal = () => {
       }
     });
 
-    // Redimensionar cuando el contenedor cambie de tamaño
+    // Redimensionar con observer
     const resizeObserver = new ResizeObserver(() => {
       if (fitAddonRef.current && xtermRef.current) {
         try {
-          // Verificar que el terminal esté visible y tenga dimensiones
           const element = xtermRef.current.element;
           if (element && element.offsetWidth > 0 && element.offsetHeight > 0) {
             fitAddonRef.current.fit();
@@ -267,16 +330,11 @@ export const Terminal = () => {
       resizeObserver.observe(terminalRef.current);
     }
 
-    // Limpiar observer al desmontar
-    return () => {
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-    };
+    return () => resizeObserver?.disconnect();
   };
 
   /**
-   * Navegar en el historial de comandos
+   * Navegar en historial
    */
   const navigateHistory = (direction, xterm) => {
     if (commandHistory.length === 0) return;
@@ -286,15 +344,12 @@ export const Terminal = () => {
     if (newIndex < -1) newIndex = -1;
     if (newIndex >= commandHistory.length) newIndex = commandHistory.length - 1;
 
-    // Limpiar línea actual
     xterm.write('\r\x1b[K');
     
     if (newIndex === -1) {
-      // Volver al input actual
       xterm.write('\x1b[32m$\x1b[0m ' + currentInput);
       setHistoryIndex(-1);
     } else {
-      // Mostrar comando del historial
       const command = commandHistory[commandHistory.length - 1 - newIndex];
       xterm.write('\x1b[32m$\x1b[0m ' + command);
       setHistoryIndex(newIndex);
@@ -307,20 +362,17 @@ export const Terminal = () => {
   const addToHistory = (command) => {
     setCommandHistory(prev => {
       const newHistory = [...prev, command];
-      // Mantener solo los últimos 50 comandos
-      return newHistory.slice(-50);
+      return newHistory.slice(-50); // Mantener últimos 50
     });
   };
 
   /**
-   * Ejecutar comando en la terminal
+   * Ejecutar comando
    * Basado en la lógica funcional del debug-terminal.html
    */
   const executeCommand = async (command) => {
-    // Usar refs para obtener valores actuales y evitar cierres obsoletos
     const isReadyNow = terminalReadyRef.current;
     const core = cheeseJSCoreRef.current;
-
     if (!isReadyNow || !core) {
       xtermRef.current?.writeln('\x1b[31m❌ Terminal no está listo\x1b[0m');
       xtermRef.current?.write('\x1b[32m$\x1b[0m ');
@@ -328,24 +380,16 @@ export const Terminal = () => {
     }
 
     try {
-      setCommandsCount(prev => prev + 1);
-      
       console.log('🖥️ Ejecutando comando:', command);
       
-      // Usar el terminal manager de CheeseJS Core como en debug-terminal
+      // Usar el terminal manager de CheeseJS Core como en debug-terminal.html
       const components = core.getComponents();
-      const terminalManager = components?.terminalManager;
-
-      if (!terminalManager) {
-        xtermRef.current?.writeln('\x1b[31m❌ Terminal Manager no disponible\x1b[0m');
-        xtermRef.current?.write('\x1b[32m$\x1b[0m ');
-        return;
-      }
+      const terminalManager = components.terminalManager;
       
       // Ejecutar comando usando el método correcto
       await terminalManager.executeCommand(command);
       
-      console.log('✅ Comando enviado:', command);
+      console.log(`✅ Comando enviado: ${command}`);
       
     } catch (error) {
       console.error('❌ Error ejecutando comando:', error);
@@ -355,96 +399,78 @@ export const Terminal = () => {
   };
 
   /**
-   * Manejar WebContainer listo
-   * Siguiendo el patrón del debug-terminal.html
+   * Limpiar terminal
+   */
+  const clearTerminal = () => {
+    if (xtermRef.current) {
+      xtermRef.current.clear();
+      writeWelcome(xtermRef.current);
+    }
+  };
+
+  /**
+   * Reinicializar terminal
+   */
+  const resetTerminal = () => {
+    if (xtermRef.current) {
+      xtermRef.current.dispose();
+      xtermRef.current = null;
+    }
+    initializeTerminal();
+  };
+
+  /**
+   * Event handlers
    */
   const handleWebContainerReady = () => {
-    setTerminalReady(true);
-    terminalReadyRef.current = true; // mantener ref en sync inmediatamente
     setIsConnected(true);
     
     if (xtermRef.current) {
-      xtermRef.current.writeln('\x1b[32m✅ Terminal listo para usar\x1b[0m');
-      xtermRef.current.writeln('Terminal inicializado correctamente');
-      xtermRef.current.writeln('Puedes ejecutar comandos básicos');
+      xtermRef.current.writeln('\x1b[32m✅ WebContainer conectado\x1b[0m');
       xtermRef.current.write('\x1b[32m$\x1b[0m ');
     }
 
     console.log('🖥️ Terminal conectada a WebContainer');
   };
 
-  /**
-   * Manejar errores de WebContainer
-   */
-  const handleWebContainerError = (data) => {
-    if (xtermRef.current) {
-      xtermRef.current.writeln(`\x1b[31m❌ Error de WebContainer: ${data.error}\x1b[0m`);
-      xtermRef.current.write('\x1b[32m$\x1b[0m ');
-    }
-    console.error('❌ Error de WebContainer:', data.error);
-  };
-
-  /**
-   * Manejar terminal lista
-   */
-  const handleTerminalReady = () => {
-    console.log('🖥️ Terminal Manager listo');
-  };
-
-  /**
-   * Manejar output de terminal
-   * Siguiendo el patrón del debug-terminal.html
-   */
   const handleTerminalOutput = (data) => {
     if (xtermRef.current && data.data) {
-      if (data.type === 'error') {
-        xtermRef.current.writeln(`\x1b[31mError: ${data.data}\x1b[0m`);
-        console.error('❌ Error de terminal:', data.data);
-      } else {
-        xtermRef.current.write(data.data);
-      }
+      xtermRef.current.write(data.data);
     }
   };
 
-  /**
-   * Manejar limpiar terminal
-   */
-  const handleTerminalClear = () => {
+  const handleTerminalReady = () => {
     if (xtermRef.current) {
-      xtermRef.current.clear();
-      writeWelcomeMessage(xtermRef.current);
+      xtermRef.current.write('\x1b[32m$\x1b[0m ');
     }
   };
 
-  /**
-   * Manejar ejecución de comando desde eventos externos
-   */
-  const handleExecuteCommand = (data) => {
-    if (xtermRef.current && data.command) {
-      xtermRef.current.writeln(`\x1b[90m> ${data.command}\x1b[0m`);
-      executeCommand(data.command);
+  const handleTabAction = (data) => {
+    if (data.panelId !== panelId) return;
+    
+    switch (data.action) {
+      case 'clear':
+        clearTerminal();
+        break;
+      case 'reset':
+        resetTerminal();
+        break;
+      case 'settings':
+        // TODO: Configuración de terminal
+        if (xtermRef.current) {
+          xtermRef.current.writeln('\x1b[90m⚙️ Configuración de terminal (próximamente)\x1b[0m');
+      xtermRef.current.write('\x1b[32m$\x1b[0m ');
+        }
+        break;
     }
   };
 
-  /**
-   * Manejar cambio de tema
-   */
-  const handleThemeChange = () => {
+  const handleThemeUpdate = () => {
     applyTheme();
   };
 
   /**
-   * Limpiar terminal
-   */
-  const clearTerminal = () => {
-    if (xtermRef.current) {
-      xtermRef.current.clear();
-      writeWelcomeMessage(xtermRef.current);
-    }
-  };
-
-  /**
-   * Cleanup al desmontar
+   * Cleanup
    */
   const cleanup = () => {
     if (xtermRef.current) {
@@ -455,77 +481,33 @@ export const Terminal = () => {
     webLinksAddonRef.current = null;
   };
 
-  /**
-   * Inicializar CheeseJS Core y configurar eventos
-   * Siguiendo exactamente la lógica del debug-terminal.html
-   */
-  const initializeCheeseJSCore = async () => {
-    try {
-      console.log('🖥️ Inicializando CheeseJS Core en terminal...');
-      
-      // Importar CheeseJS Core dinámicamente
-      const { cheeseJSCore: core } = await import('../../core/cheesejs-core.js');
-      setCheeseJSCore(core);
-      cheeseJSCoreRef.current = core; // sincronizar ref inmediatamente
-      
-      // Configurar listeners de eventos
-      const unsubscribeWebContainerReady = eventBus.subscribe('cheesejs:webcontainer-ready', handleWebContainerReady);
-      const unsubscribeWebContainerError = eventBus.subscribe('cheesejs:webcontainer-error', handleWebContainerError);
-      const unsubscribeTerminalReady = eventBus.subscribe('terminal:ready', handleTerminalReady);
-      const unsubscribeTerminalOutput = eventBus.subscribe('terminal:output', handleTerminalOutput);
-      const unsubscribeTerminalClear = eventBus.subscribe('terminal:clear', handleTerminalClear);
-      const unsubscribeThemeChanged = eventBus.subscribe('theme:changed', handleThemeChange);
-      
-      // Inicializar CheeseJS Core
-      console.log('🚀 Inicializando CheeseJS Core...');
-      await core.initialize();
-      
-      // Guardar funciones de limpieza
-      return () => {
-        unsubscribeWebContainerReady();
-        unsubscribeWebContainerError();
-        unsubscribeTerminalReady();
-        unsubscribeTerminalOutput();
-        unsubscribeTerminalClear();
-        unsubscribeThemeChanged();
-      };
-      
-    } catch (error) {
-      console.error('❌ Error inicializando CheeseJS Core en terminal:', error);
-      if (xtermRef.current) {
-        xtermRef.current.writeln(`\x1b[31m❌ Error crítico: ${error.message}\x1b[0m`);
-      }
-    }
-  };
-
   return (
-    <div className="terminal-container">
-      <div className="terminal-header">
-        <div className="terminal-title">
-          <span className="terminal-icon">🖥️</span>
-          <span className="terminal-name">Terminal</span>
-          <span className="terminal-status">
-            {isConnected ? '🟢 Conectada' : '🟡 Desconectada'}
+    <div className="terminal-panel">
+      {/* Status bar */}
+      <div className="terminal-status">
+        <div className="status-info">
+          <span className="status-icon">
+            {isConnected ? '🟢' : '🟡'}
+          </span>
+          <span className="status-text">
+            {isConnected ? 'Conectada' : 'Desconectada'}
           </span>
         </div>
         
-        <div className="terminal-actions">
-          <button 
-            className="terminal-btn"
-            onClick={clearTerminal}
-            title="Limpiar terminal"
-          >
-            🧹 Limpiar
-          </button>
+        <div className="terminal-info">
+          <span className="history-count">
+            Historial: {commandHistory.length}
+          </span>
         </div>
       </div>
 
+      {/* Terminal container */}
       <div 
         ref={terminalRef}
-        className="terminal-content"
+        className="terminal-container"
       />
     </div>
   );
 };
 
-export default Terminal;
+export default TerminalPanel;

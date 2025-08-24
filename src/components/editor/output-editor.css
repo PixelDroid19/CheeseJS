@@ -3,10 +3,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+  min-height: 0;
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Output Toolbar */
@@ -107,6 +110,27 @@
   position: relative;
   overflow: hidden;
   background-color: var(--surface-color);
+}
+
+/* Output Content Area */
+.output-content {
+  flex: 1;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Monaco Editor Container */
+.output-content .monaco-editor {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.output-content .monaco-editor .overflow-guard {
+  border-radius: 0 0 8px 8px;
 }
 
 /* Output Loading */

@@ -1,273 +1,107 @@
-/* CheeseJS App Styles - Three Panel Layout */
+/* CheeseJS App Styles - Main Editor Layout */
 
-/* Three Panel Layout Container */
-.three-panel-layout {
+/* Main Editor Layout Container */
+.main-editor-layout {
   display: grid;
-  grid-template-rows: 1fr 4px minmax(200px, 30%);
+  grid-template-columns: 1fr 1fr;
   height: 100%;
-  gap: 0;
+  width: 100%;
+  gap: 4px;
   overflow: hidden;
   background-color: var(--background-color);
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.three-panel-layout.resizing {
-  user-select: none;
-  cursor: inherit;
-}
-
-/* Top Panel - Editor y Salida */
-.top-panel {
-  display: grid;
-  grid-template-columns: minmax(300px, 50%) 4px 1fr;
+/* Editor Section - Izquierda */
+.editor-section {
   height: 100%;
-  gap: 0;
-  overflow: hidden;
-}
-
-/* Editor Panel - Izquierda */
-.editor-panel {
-  height: 100%;
+  width: 100%;
+  min-height: 0;
   overflow: hidden;
   background-color: var(--editor-background);
   border: 1px solid var(--border-color);
-  border-radius: 4px 0 0 0;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
-/* Output Panel - Derecha */
-.output-panel {
+/* Output Section - Derecha */
+.output-section {
   height: 100%;
+  width: 100%;
+  min-height: 0;
   overflow: hidden;
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-left: none;
-  border-radius: 0 4px 0 0;
-}
-
-/* Terminal Panel - Abajo */
-.terminal-panel {
-  height: 100%;
-  overflow: hidden;
-  background-color: var(--terminal-background);
-  border: 1px solid var(--border-color);
-  border-top: none;
-  border-radius: 0 0 4px 4px;
-}
-
-/* Separadores */
-.vertical-separator {
-  background-color: var(--border-color);
-  cursor: ew-resize;
-  position: relative;
-  transition: background-color 0.2s ease;
-  user-select: none;
-}
-
-.vertical-separator:hover {
-  background-color: var(--primary-color);
-}
-
-.vertical-separator::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 2px;
-  height: 30px;
-  background-color: var(--text-muted);
-  border-radius: 1px;
-  transition: background-color 0.2s ease;
-}
-
-.vertical-separator:hover::before {
-  background-color: white;
-}
-
-.horizontal-separator {
-  background-color: var(--border-color);
-  cursor: ns-resize;
-  position: relative;
-  transition: background-color 0.2s ease;
-  user-select: none;
-}
-
-.horizontal-separator:hover {
-  background-color: var(--primary-color);
-}
-
-.horizontal-separator::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 30px;
-  height: 2px;
-  background-color: var(--text-muted);
-  border-radius: 1px;
-  transition: background-color 0.2s ease;
-}
-
-.horizontal-separator:hover::before {
-  background-color: white;
-}
-
-/* Separadores activos */
-.vertical-separator.resizing,
-.horizontal-separator.resizing {
-  background-color: var(--primary-color);
-}
-
-.vertical-separator.resizing::before,
-.horizontal-separator.resizing::before {
-  background-color: white;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 /* Layout responsivo */
 @media (max-width: 1024px) {
-  .three-panel-layout {
-    grid-template-rows: 1fr 4px minmax(150px, 25%);
-  }
-  
-  .top-panel {
-    grid-template-columns: minmax(250px, 45%) 4px 1fr;
+  .main-editor-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 4px;
   }
 }
 
 @media (max-width: 768px) {
-  .three-panel-layout {
-    grid-template-rows: minmax(200px, 40%) 4px minmax(150px, 30%) 4px minmax(100px, 30%);
+  .main-editor-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
   }
   
-  .top-panel {
-    display: block;
-    grid-column: 1;
-    grid-row: 1;
-  }
-  
-  .editor-panel {
-    height: 100%;
-    border-radius: 4px 4px 0 0;
-    border-bottom: none;
-  }
-  
-  .output-panel {
-    display: none; /* Ocultar en móvil */
-  }
-  
-  .vertical-separator {
-    display: none;
-  }
-  
-  .terminal-panel {
-    grid-column: 1;
-    grid-row: 3;
-    border-radius: 0 0 4px 4px;
-  }
-  
-  .horizontal-separator {
-    cursor: ns-resize;
-    grid-column: 1;
-    grid-row: 2;
-  }
-  
-  .horizontal-separator::before {
-    width: 20px;
-    height: 2px;
+  .output-section {
+    display: none; /* Ocultar output en móvil - se usa la consola unificada */
   }
 }
 
 @media (max-width: 480px) {
-  .three-panel-layout {
-    grid-template-rows: 1fr 4px minmax(120px, 25%);
+  .editor-section,
+  .output-section {
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
   }
-  
-  .editor-panel,
-  .output-panel,
-  .terminal-panel {
-    border-radius: 0;
-    border: none;
-    border-bottom: 1px solid var(--border-color);
-  }
-  
-  .terminal-panel {
-    border-bottom: none;
-  }
-}
-
-/* Panel States */
-.panel-maximized {
-  grid-row: 1 / -1;
-  grid-column: 1 / -1;
-  z-index: 10;
-}
-
-.panel-minimized {
-  display: none;
 }
 
 /* Theme Transitions */
-.three-panel-layout,
-.top-panel,
-.editor-panel,
-.output-panel,
-.terminal-panel,
-.vertical-separator,
-.horizontal-separator {
+.main-editor-layout,
+.editor-section,
+.output-section {
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* High Contrast Mode */
 @media (prefers-contrast: high) {
-  .editor-panel,
-  .output-panel,
-  .terminal-panel {
+  .editor-section,
+  .output-section {
     border: 2px solid var(--text-color);
-  }
-  
-  .vertical-separator,
-  .horizontal-separator {
-    background-color: var(--text-color);
   }
 }
 
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-  .vertical-separator,
-  .horizontal-separator,
-  .three-panel-layout,
-  .top-panel,
-  .editor-panel,
-  .output-panel,
-  .terminal-panel {
+  .main-editor-layout,
+  .editor-section,
+  .output-section {
     transition: none;
   }
 }
 
 /* Print Styles */
 @media print {
-  .three-panel-layout {
+  .main-editor-layout {
     display: block;
     height: auto;
   }
   
-  .top-panel {
-    display: block;
-    height: auto;
-  }
-  
-  .terminal-panel {
-    display: none;
-  }
-  
-  .vertical-separator,
-  .horizontal-separator {
-    display: none;
-  }
-  
-  .editor-panel,
-  .output-panel {
+  .editor-section,
+  .output-section {
     border: 1px solid black;
     margin-bottom: 10px;
     height: auto;
@@ -276,9 +110,8 @@
 }
 
 /* Focus Management */
-.editor-panel:focus-within,
-.output-panel:focus-within,
-.terminal-panel:focus-within {
+.editor-section:focus-within,
+.output-section:focus-within {
   outline: 2px solid var(--primary-color);
   outline-offset: -2px;
 }
@@ -290,6 +123,7 @@
   justify-content: center;
   color: var(--text-muted);
   font-size: 14px;
+  height: 100%;
 }
 
 .panel-loading::before {
@@ -301,10 +135,4 @@
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
-}
-  }
-  
-  .output-panel {
-    border: none;
-  }
 }

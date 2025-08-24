@@ -64,22 +64,34 @@
 .app-main {
   display: grid;
   flex: 1;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
   overflow: hidden;
   position: relative;
+  box-sizing: border-box;
 }
 
 /* Content Area */
 .content-area {
   display: grid;
   grid-template-rows: 1fr;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
   overflow: hidden;
   background-color: var(--surface-color);
+  box-sizing: border-box;
 }
 
 .editor-container {
+  height: 100%;
+  width: 100%;
+  min-height: 0;
   overflow: hidden;
   background-color: var(--editor-background);
   position: relative;
+  box-sizing: border-box;
 }
 
 .console-container {

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Terminal CheeseJS</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .terminal-container {
+            background: #000;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #00ff00;
+        }
+        .log-container {
+            background: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .log-info { color: #87ceeb; }
+        .log-success { color: #90ee90; background: rgba(144, 238, 144, 0.1); }
+        .log-error { color: #ff6b6b; background: rgba(255, 107, 107, 0.1); }
+        .log-warning { color: #ffa500; background: rgba(255, 165, 0, 0.1); }
+        .timestamp {
+            color: #888;
+            font-size: 12px;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            flex: 1;
+            min-width: 120px;
+        }
+        button:hover {
+            background: #357abd;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .status {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .status-item {
+            margin: 5px 0;
+        }
+        .status-ready { color: #90ee90; }
+        .status-error { color: #ff6b6b; }
+        .status-pending { color: #ffa500; }
+        .command-input {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: white;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖥️ Debug Terminal CheeseJS</h1>
+        
+        <div class="status" id="status">
+            <div class="status-item">Estado: <span id="terminal-status" class="status-pending">Inicializando...</span></div>
+            <div class="status-item">Comandos ejecutados: <span id="commands-count">0</span></div>
+        </div>
+        
+        <div class="controls">
+            <button id="test-ls" disabled>ls</button>
+            <button id="test-pwd" disabled>pwd</button>
+            <button id="test-echo" disabled>echo "Hola"</button>
+            <button id="test-node" disabled>node --version</button>
+            <button id="test-npm" disabled>npm --version</button>
+            <button id="clear-terminal">Limpiar Terminal</button>
+        </div>
+        
+        <div class="command-input">
+            <input type="text" id="custom-command" placeholder="Escribe un comando personalizado..." disabled>
+            <button id="run-custom" disabled>Ejecutar</button>
+        </div>
+        
+        <div class="terminal-container" id="terminalContainer">
+            <div>Inicializando terminal...</div>
+        </div>
+        
+        <h3>Logs del Sistema</h3>
+        <div class="log-container" id="logContainer"></div>
+    </div>
+
+    <script type="module">
+        let commandsCount = 0;
+        let terminalReady = false;
+        let cheeseJSCore = null;
+        let terminalProcess = null;
+
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function terminalOutput(message) {
+            const terminalContainer = document.getElementById('terminalContainer');
+            const output = document.createElement('div');
+            output.textContent = message;
+            terminalContainer.appendChild(output);
+            terminalContainer.scrollTop = terminalContainer.scrollHeight;
+        }
+
+        function updateStatus() {
+            document.getElementById('terminal-status').textContent = terminalReady ? 'Listo' : 'Inicializando...';
+            document.getElementById('terminal-status').className = terminalReady ? 'status-ready' : 'status-pending';
+            document.getElementById('commands-count').textContent = commandsCount;
+            
+            // Habilitar controles cuando esté listo
+            const buttons = ['test-ls', 'test-pwd', 'test-echo', 'test-node', 'test-npm', 'run-custom'];
+            buttons.forEach(id => {
+                document.getElementById(id).disabled = !terminalReady;
+            });
+            document.getElementById('custom-command').disabled = !terminalReady;
+        }
+
+        async function runCommand(command) {
+            if (!terminalReady || !cheeseJSCore) {
+                log('❌ Terminal no está listo', 'error');
+                return;
+            }
+
+            try {
+                commandsCount++;
+                updateStatus();
+                
+                log(`🚀 Ejecutando comando: ${command}`, 'info');
+                terminalOutput(`$ ${command}`);
+                
+                // Usar el terminal manager de CheeseJS Core
+                const components = cheeseJSCore.getComponents();
+                const terminalManager = components.terminalManager;
+                
+                // Ejecutar comando usando el método correcto
+                await terminalManager.executeCommand(command);
+                
+                log(`✅ Comando enviado: ${command}`, 'success');
+                
+            } catch (error) {
+                log(`❌ Error ejecutando comando: ${error.message}`, 'error');
+                terminalOutput(`Error: ${error.message}`);
+            }
+        }
+
+        async function testTerminal() {
+            try {
+                log('🖥️ Iniciando prueba de terminal...', 'info');
+                
+                // Importar CheeseJS Core
+                log('📦 Importando CheeseJS Core...', 'info');
+                const { cheeseJSCore: core } = await import('./src/core/cheesejs-core.js');
+                cheeseJSCore = core;
+                
+                // Importar event bus
+                const { eventBus } = await import('./src/utils/event-bus.js');
+                
+                // Configurar listeners
+                eventBus.subscribe('cheesejs:webcontainer-ready', () => {
+                    terminalReady = true;
+                    log('✅ Terminal listo para usar', 'success');
+                    terminalOutput('Terminal inicializado correctamente');
+                    terminalOutput('Puedes ejecutar comandos básicos');
+                    updateStatus();
+                });
+                
+                eventBus.subscribe('cheesejs:webcontainer-error', (data) => {
+                    log(`❌ Error de WebContainer: ${data.error}`, 'error');
+                    terminalOutput(`Error: ${data.error}`);
+                });
+                
+                // Escuchar salida del terminal
+                eventBus.subscribe('terminal:output', (data) => {
+                    if (data.type === 'error') {
+                        terminalOutput(`Error: ${data.data}`);
+                        log(`❌ Error de terminal: ${data.data}`, 'error');
+                    } else {
+                        terminalOutput(data.data);
+                    }
+                });
+                
+                // Escuchar cuando el terminal esté listo
+                eventBus.subscribe('terminal:ready', () => {
+                    log('🖥️ Terminal Manager listo', 'success');
+                });
+                
+                // Configurar botones
+                document.getElementById('test-ls').onclick = () => runCommand('ls');
+                document.getElementById('test-pwd').onclick = () => runCommand('pwd');
+                document.getElementById('test-echo').onclick = () => runCommand('echo "Hola desde CheeseJS"');
+                document.getElementById('test-node').onclick = () => runCommand('node --version');
+                document.getElementById('test-npm').onclick = () => runCommand('npm --version');
+                
+                document.getElementById('run-custom').onclick = () => {
+                    const command = document.getElementById('custom-command').value.trim();
+                    if (command) {
+                        runCommand(command);
+                        document.getElementById('custom-command').value = '';
+                    }
+                };
+                
+                document.getElementById('custom-command').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('run-custom').click();
+                    }
+                });
+                
+                document.getElementById('clear-terminal').onclick = () => {
+                    document.getElementById('terminalContainer').innerHTML = '<div>Terminal limpiado</div>';
+                };
+                
+                // Inicializar CheeseJS Core
+                log('🚀 Inicializando CheeseJS Core...', 'info');
+                await cheeseJSCore.initialize();
+                
+            } catch (error) {
+                log(`❌ Error crítico: ${error.message}`, 'error');
+                terminalOutput(`Error crítico: ${error.message}`);
+                console.error('Error completo:', error);
+            }
+        }
+
+        // Iniciar prueba cuando se cargue la página
+        testTerminal();
+    </script>
+</body>
+</html>

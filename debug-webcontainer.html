@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug WebContainer - CheeseJS</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #2d5a2d; }
+        .error { background: #5a2d2d; }
+        .warning { background: #5a5a2d; }
+        .info { background: #2d2d5a; }
+        pre { background: #333; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧀 Debug WebContainer - CheeseJS</h1>
+    <div id="status">🔍 Verificando WebContainer...</div>
+    <div id="logs"></div>
+    
+    <script type="module">
+        const statusDiv = document.getElementById('status');
+        const logsDiv = document.getElementById('logs');
+        
+        function log(message, type = 'info') {
+            console.log(message);
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> ${message}`;
+            logsDiv.appendChild(div);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        async function testWebContainer() {
+            try {
+                log('🔍 Verificando contexto de ejecución...', 'info');
+                log(`- Protocolo: ${window.location.protocol}`, 'info');
+                log(`- Host: ${window.location.host}`, 'info');
+                log(`- Contexto seguro: ${window.isSecureContext}`, 'info');
+                log(`- User Agent: ${navigator.userAgent.substring(0, 50)}...`, 'info');
+                
+                // Headers COOP/COEP están configurados en vite.config.js
+                log('✅ Headers COOP/COEP configurados en Vite', 'success');
+                
+                log('🔍 Importando WebContainer API...', 'info');
+                const { WebContainer } = await import('@webcontainer/api');
+                log('✅ WebContainer API importada correctamente', 'success');
+                
+                log('🚀 Inicializando WebContainer...', 'info');
+                const startTime = Date.now();
+                
+                const webcontainer = await WebContainer.boot({
+                    coep: 'require-corp',
+                    workdirName: 'cheesejs-debug-workspace'
+                });
+                
+                const initTime = Date.now() - startTime;
+                log(`✅ WebContainer inicializado en ${initTime}ms`, 'success');
+                
+                statusDiv.innerHTML = '✅ WebContainer funcionando correctamente';
+                statusDiv.className = 'status success';
+                
+                // Probar comando básico
+                log('🧪 Probando comando echo...', 'info');
+                const process = await webcontainer.spawn('echo', ['Hola desde WebContainer']);
+                
+                let output = '';
+                process.output.pipeTo(new WritableStream({
+                    write(data) {
+                        output += data;
+                    }
+                }));
+                
+                const exitCode = await process.exit;
+                log(`✅ Comando echo completado con código: ${exitCode}`, 'success');
+                log(`📤 Salida: ${output.trim()}`, 'info');
+                
+                // Probar sistema de archivos
+                log('📁 Probando sistema de archivos...', 'info');
+                await webcontainer.fs.writeFile('test.txt', 'Hola CheeseJS!');
+                const content = await webcontainer.fs.readFile('test.txt', 'utf-8');
+                log(`✅ Archivo creado y leído: ${content}`, 'success');
+                
+                log('🎉 Todas las pruebas de WebContainer pasaron exitosamente', 'success');
+                
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                log(`❌ Stack: ${error.stack}`, 'error');
+                statusDiv.innerHTML = `❌ Error: ${error.message}`;
+                statusDiv.className = 'status error';
+                
+                // Diagnósticos adicionales
+                log('🔍 Diagnósticos adicionales:', 'warning');
+                log(`- SharedArrayBuffer disponible: ${typeof SharedArrayBuffer !== 'undefined'}`, 'info');
+                log(`- Atomics disponible: ${typeof Atomics !== 'undefined'}`, 'info');
+                log(`- Worker disponible: ${typeof Worker !== 'undefined'}`, 'info');
+            }
+        }
+        
+        // Interceptar errores globales
+        window.addEventListener('error', (e) => {
+            log(`❌ Error global: ${e.message} en ${e.filename}:${e.lineno}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            log(`❌ Promise rechazada: ${e.reason}`, 'error');
+        });
+        
+        testWebContainer();
+    </script>
+</body>
+</html>
