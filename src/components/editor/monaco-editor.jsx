@@ -1,375 +1,472 @@
-import React, { useRef, useEffect, useState } from 'react';
+//import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { useTheme } from '../layout/theme-provider.jsx';
+import { useEditorStore } from '../../stores/editor-store.js';
+import { useTerminalStore } from '../../stores/terminal-store.js';
+import { languageDetectionService } from '../../services/language-detection-service.js';
+import { dependencyManager } from '../../services/dependency-management-service.js';
 import { configService } from '../../services/config-service.js';
 import { eventBus } from '../../utils/event-bus.js';
 import './monaco-editor.css';
 
 /**
- * Monaco Editor Component
- * Editor de código con configuración personalizable y temas
+ * Enhanced Monaco Editor Component
+ * Editor de código con detección automática de lenguajes, gestión de dependencias y ejecución avanzada
  */
 export const MonacoEditor = () => {
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
   const { currentTheme, isDarkTheme, themeVariables } = useTheme();
   
-  const [code, setCode] = useState(`// 🧀 Bienvenido a CheeseJS
-// Escribe tu código JavaScript aquí
-
-console.log('¡Hola CheeseJS! 🧀');
-
-// Ejemplo básico
-const saludo = 'Hola mundo desde CheeseJS';
-console.log(saludo);
-
-// Funciones
-function sumar(a, b) {
-  return a + b;
-}
-
-console.log('2 + 3 =', sumar(2, 3));
-
-// Arrays y métodos
-const numeros = [1, 2, 3, 4, 5];
-const pares = numeros.filter(n => n % 2 === 0);
-console.log('Números pares:', pares);
-
-// Promises y async/await
-async function obtenerDatos() {
-  try {
-    // Simular una API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return { mensaje: 'Datos obtenidos correctamente' };
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
-
-obtenerDatos().then(datos => {
-  console.log(datos);
-});
-
-// Experimenta con tu código aquí...
-`);
-
-  const [editorConfig, setEditorConfig] = useState({});
-  const [isReady, setIsReady] = useState(false);
+  // Estados locales
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [showDependencyDialog, setShowDependencyDialog] = useState(false);
+  // Eliminado: resultados de ejecución se gestionan en OutputEditor
+  
+  // Stores
+  const {
+    currentCode,
+    currentLanguage,
+    currentFile,
+    isExecuting,
+    executionResult,
+    executionError,
+    missingDependencies,
+    suggestedInstallations,
+    editorConfig,
+    theme,
+    hasUnsavedChanges,
+    // Actions
+    initialize,
+    setCode,
+    detectLanguage,
+    executeCode,
+    formatCode,
+    saveCode,
+    newFile,
+    installDependency,
+    updateConfig,
+    updateTheme
+  } = useEditorStore();
+  
+  const terminalTheme = useTerminalStore(state => state.theme);
 
   useEffect(() => {
-    // Cargar configuración del editor
-    const loadEditorConfig = async () => {
-      await configService.initialize();
-      
-      const config = {
-        fontSize: configService.get('editor.fontSize', 14),
-        fontFamily: configService.get('editor.fontFamily', 'Monaco, Menlo, "Ubuntu Mono", monospace'),
-        tabSize: configService.get('editor.tabSize', 2),
-        insertSpaces: configService.get('editor.insertSpaces', true),
-        wordWrap: configService.get('editor.wordWrap', 'on'),
-        lineNumbers: configService.get('editor.lineNumbers', 'on'),
-        minimap: { enabled: configService.get('editor.minimap', true) },
-        automaticLayout: configService.get('editor.automaticLayout', true),
-        scrollBeyondLastLine: configService.get('editor.scrollBeyondLastLine', true),
-        smoothScrolling: configService.get('editor.smoothScrolling', true),
-        cursorBlinking: configService.get('editor.cursorBlinking', 'blink'),
-        cursorStyle: configService.get('editor.cursorStyle', 'line'),
-        renderWhitespace: configService.get('editor.renderWhitespace', 'selection'),
-        renderControlCharacters: configService.get('editor.renderControlCharacters', false),
-        rulers: configService.get('editor.rulers', []),
-        folding: configService.get('editor.folding', true),
-        foldingStrategy: configService.get('editor.foldingStrategy', 'auto'),
-        showFoldingControls: configService.get('editor.showFoldingControls', 'mouseover'),
-        matchBrackets: configService.get('editor.matchBrackets', 'always'),
-        selectionHighlight: configService.get('editor.selectionHighlight', true),
-        occurrencesHighlight: configService.get('editor.occurrencesHighlight', true),
-        bracketPairColorization: { enabled: configService.get('editor.bracketPairColorization', true) },
-        formatOnPaste: configService.get('editor.formatOnPaste', true),
-        formatOnType: configService.get('editor.formatOnType', true),
-        acceptSuggestionOnCommitCharacter: configService.get('editor.acceptSuggestionOnCommitCharacter', true),
-        acceptSuggestionOnEnter: configService.get('editor.acceptSuggestionOnEnter', 'on'),
-        snippetSuggestions: configService.get('editor.snippetSuggestions', 'top'),
-        quickSuggestions: configService.get('editor.quickSuggestions', true),
-        suggestOnTriggerCharacters: configService.get('editor.suggestOnTriggerCharacters', true),
-        wordBasedSuggestions: configService.get('editor.wordBasedSuggestions', true),
-        parameterHints: { enabled: configService.get('editor.parameterHints', true) },
-        autoClosingBrackets: configService.get('editor.autoClosingBrackets', 'languageDefined'),
-        autoClosingQuotes: configService.get('editor.autoClosingQuotes', 'languageDefined'),
-        autoSurround: configService.get('editor.autoSurround', 'languageDefined'),
-        linkedEditing: configService.get('editor.linkedEditing', false),
-      };
-      
-      setEditorConfig(config);
-    };
+    // Suscribirse a eventos del event bus
+    const unsubscribeRunRequested = eventBus.subscribe('code:run-requested', () => {
+      handleExecuteCode();
+    });
 
-    loadEditorConfig();
+    const unsubscribeStopRequested = eventBus.subscribe('code:stop-requested', () => {
+      // TODO: Implementar cancelación de ejecución
+      console.log('🛑 Cancelación de ejecución solicitada');
+    });
 
-    // Suscribirse a eventos de configuración
+    const unsubscribeFormatRequested = eventBus.subscribe('code:format-requested', () => {
+      handleFormatCode();
+    });
+
+    const unsubscribeFileNewRequested = eventBus.subscribe('file:new-requested', () => {
+      handleNewFile();
+    });
+
+    const unsubscribeFileSaveRequested = eventBus.subscribe('file:save-requested', () => {
+      handleSaveCode();
+    });
+
+    // Usar configService para gestionar configuración
     const unsubscribeConfigChanged = eventBus.subscribe('config:changed', (data) => {
       const { key, newValue } = data;
       if (key.startsWith('editor.')) {
         const configKey = key.replace('editor.', '');
-        setEditorConfig(prev => ({ ...prev, [configKey]: newValue }));
+        configService.updateConfig({ [configKey]: newValue });
+        updateConfig({ [configKey]: newValue });
       }
     });
 
-    // Suscribirse a eventos de ejecución
-    const unsubscribeRunRequested = eventBus.subscribe('code:run-requested', () => {
-      executeCode();
-    });
-
-    const unsubscribeStopRequested = eventBus.subscribe('code:stop-requested', () => {
-      stopExecution();
-    });
-
-    const unsubscribeFormatRequested = eventBus.subscribe('code:format-requested', () => {
-      formatCode();
-    });
-
-    const unsubscribeFileNewRequested = eventBus.subscribe('file:new-requested', () => {
-      // Limpiar editor con plantilla básica
-      setCode(`// 🧀 Nuevo archivo en CheeseJS
-// Escribe tu código JavaScript aquí
-
-console.log('¡Hola CheeseJS! 🧀');
-
-// Tu código aquí...
-`);
-    });
-
-    const unsubscribeFileSaveRequested = eventBus.subscribe('file:save-requested', () => {
-      saveCode();
-    });
-
     return () => {
-      unsubscribeConfigChanged();
       unsubscribeRunRequested();
       unsubscribeStopRequested();
       unsubscribeFormatRequested();
       unsubscribeFileNewRequested();
       unsubscribeFileSaveRequested();
+      unsubscribeConfigChanged();
     };
-  }, []);
+  }, [updateConfig]);
+
+  // Sincronizar tema con terminal store
+  useEffect(() => {
+    if (terminalTheme && monacoRef.current) {
+      const editorTheme = terminalTheme.background?.includes('#1e') ? 'cheesejs-dark' : 'cheesejs-light';
+      updateTheme({ 
+        name: editorTheme,
+        isDark: terminalTheme.background?.includes('#1e'),
+        colors: {
+          background: terminalTheme.background,
+          foreground: terminalTheme.foreground,
+          selection: terminalTheme.selection || '#264f78',
+          lineHighlight: '#2a2d2e',
+          cursor: terminalTheme.cursor
+        }
+      });
+    }
+  }, [terminalTheme, updateTheme]);
+
+  // Eliminado: formateo de resultados. La salida se visualiza en OutputEditor.
+
+  // Analizar dependencias cuando cambia el código
+  useEffect(() => {
+    if (currentCode && currentCode.trim()) {
+      const analyzeCode = async () => {
+        try {
+          const analysis = await dependencyManager.analyzeDependencies(currentCode, currentLanguage);
+          if (analysis.missing.length > 0) {
+            setShowDependencyDialog(true);
+          }
+        } catch (error) {
+          console.error('Error analizando dependencias:', error);
+        }
+      };
+      
+      analyzeCode();
+    }
+  }, [currentCode, currentLanguage]);
 
   /**
    * Configurar Monaco Editor cuando se monta
    */
-  const handleEditorDidMount = (editor, monaco) => {
+  const handleEditorDidMount = async (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
-    setIsReady(true);
 
-    // Configurar themes personalizados
-    setupCustomThemes(monaco);
-    
-    // Aplicar theme inicial
-    applyTheme(monaco);
+    try {
+      // Inicializar editor store
+      await initialize(editor, monaco);
+      
+      setIsInitialized(true);
 
-    // Configurar atajos de teclado
-    setupKeyboardShortcuts(editor);
+      // Configurar event listeners específicos
+      setupEditorEventListeners(editor, monaco);
 
-    // Configurar autocompletado personalizado
-    setupCustomCompletions(monaco);
+      // Cargar configuración inicial del editor
+      const editorConfig = await configService.getEditorConfig();
+      updateConfig(editorConfig);
 
-    // Emitir evento de editor listo
-    eventBus.emit('editor:ready', { editor, monaco });
-    
-    console.log('🖥️ Monaco Editor listo');
-  };
-
-  /**
-   * Configurar themes personalizados
-   */
-  const setupCustomThemes = (monaco) => {
-    // Theme Light personalizado
-    monaco.editor.defineTheme('cheesejs-light', {
-      base: 'vs',
-      inherit: true,
-      rules: [
-        { token: 'comment', foreground: '6A6A6A', fontStyle: 'italic' },
-        { token: 'keyword', foreground: '0066CC', fontStyle: 'bold' },
-        { token: 'string', foreground: '009900' },
-        { token: 'number', foreground: 'FF6600' },
-        { token: 'identifier', foreground: '000000' },
-        { token: 'operator', foreground: '666666' },
-      ],
-      colors: {
-        'editor.background': themeVariables['--editor-background'] || '#FFFFFF',
-        'editor.foreground': themeVariables['--editor-foreground'] || '#000000',
-        'editor.selectionBackground': themeVariables['--editor-selection'] || '#ADD6FF',
-        'editor.lineHighlightBackground': themeVariables['--editor-line-highlight'] || '#F8F9FA',
-        'editorGutter.background': themeVariables['--editor-gutter'] || '#F1F3F4',
-        'editorCursor.foreground': themeVariables['--editor-cursor'] || '#000000',
-      }
-    });
-
-    // Theme Dark personalizado
-    monaco.editor.defineTheme('cheesejs-dark', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [
-        { token: 'comment', foreground: '999999', fontStyle: 'italic' },
-        { token: 'keyword', foreground: '569CD6', fontStyle: 'bold' },
-        { token: 'string', foreground: 'CE9178' },
-        { token: 'number', foreground: 'B5CEA8' },
-        { token: 'identifier', foreground: 'D4D4D4' },
-        { token: 'operator', foreground: 'D4D4D4' },
-      ],
-      colors: {
-        'editor.background': themeVariables['--editor-background'] || '#1E1E1E',
-        'editor.foreground': themeVariables['--editor-foreground'] || '#D4D4D4',
-        'editor.selectionBackground': themeVariables['--editor-selection'] || '#264F78',
-        'editor.lineHighlightBackground': themeVariables['--editor-line-highlight'] || '#2D2D30',
-        'editorGutter.background': themeVariables['--editor-gutter'] || '#252526',
-        'editorCursor.foreground': themeVariables['--editor-cursor'] || '#AEAFAD',
-      }
-    });
-  };
-
-  /**
-   * Aplicar theme al editor
-   */
-  const applyTheme = (monaco) => {
-    const themeName = isDarkTheme() ? 'cheesejs-dark' : 'cheesejs-light';
-    monaco.editor.setTheme(themeName);
-  };
-
-  /**
-   * Actualizar theme cuando cambia
-   */
-  useEffect(() => {
-    if (monacoRef.current && isReady) {
-      setupCustomThemes(monacoRef.current);
-      applyTheme(monacoRef.current);
+      // Emitir evento de editor listo
+      eventBus.emit('editor:ready', { editor, monaco });
+      
+      console.log('🖥️ Enhanced Monaco Editor listo');
+      
+    } catch (error) {
+      console.error('❌ Error inicializando editor:', error);
     }
-  }, [currentTheme, themeVariables, isReady]);
-
-  /**
-   * Configurar atajos de teclado
-   */
-  const setupKeyboardShortcuts = (editor) => {
-    // Ctrl+Enter - Ejecutar código
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-      executeCode();
-    });
-
-    // Ctrl+S - Guardar (prevenir comportamiento por defecto)
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      saveCode();
-    });
-
-    // Ctrl+Shift+F - Formatear código
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyF, () => {
-      formatCode();
-    });
   };
 
   /**
-   * Configurar autocompletado personalizado
+   * Configurar event listeners específicos del editor
    */
-  const setupCustomCompletions = (monaco) => {
-    // Registrar proveedor de autocompletado para JavaScript
-    monaco.languages.registerCompletionItemProvider('javascript', {
-      provideCompletionItems: (model, position) => {
-        const suggestions = [
-          {
-            label: 'cheesejs-log',
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: 'console.log(${1:message});',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'CheeseJS console.log snippet'
-          },
-          {
-            label: 'cheesejs-function',
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: 'function ${1:functionName}(${2:params}) {\n\t${3:// código aquí}\n\treturn ${4:result};\n}',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'CheeseJS function template'
-          },
-          {
-            label: 'cheesejs-async',
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: 'async function ${1:functionName}(${2:params}) {\n\ttry {\n\t\t${3:// código async aquí}\n\t\treturn ${4:result};\n\t} catch (error) {\n\t\tconsole.error(\'Error:\', error);\n\t}\n}',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'CheeseJS async function template'
+  const setupEditorEventListeners = (editor, monaco) => {
+    // Cambios en el contenido con debounce para performance
+    let changeTimeout = null;
+    editor.onDidChangeModelContent(() => {
+      clearTimeout(changeTimeout);
+      changeTimeout = setTimeout(() => {
+        const code = editor.getValue();
+        setCode(code);
+        
+        // Detectar lenguaje automáticamente
+        const detected = detectLanguage(code, currentFile);
+        
+        // Configurar lenguaje en Monaco si cambió
+        if (detected !== currentLanguage) {
+          try {
+            languageDetectionService.configureMonacoLanguage(monaco, detected);
+          } catch (e) {
+            console.warn('No se pudo configurar el lenguaje en Monaco:', e);
           }
-        ];
+        }
+      }, 300);
+    });
 
-        return { suggestions };
-      }
+    // Cambios de selección
+    editor.onDidChangeCursorSelection((e) => {
+      // Aquí se puede implementar funcionalidad adicional
+      // como mostrar información de contexto
+    });
+
+    // Comandos personalizados
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+      handleExecuteCode();
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyF, () => {
+      handleFormatCode();
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      handleSaveCode();
     });
   };
 
   /**
-   * Ejecutar código
+   * Handlers para acciones del editor
    */
-  const executeCode = () => {
-    if (!editorRef.current) return;
-    
-    const currentCode = editorRef.current.getValue();
-    eventBus.emit('code:execute', { code: currentCode });
+  const handleExecuteCode = async () => {
+    if (isExecuting) {
+      console.warn('⚠️ Ejecución ya en progreso');
+      return;
+    }
+
+    try {
+      await executeCode();
+    } catch (error) {
+      console.error('❌ Error ejecutando código:', error);
+    }
   };
 
-  /**
-   * Detener ejecución
-   */
-  const stopExecution = () => {
-    eventBus.emit('code:stop', {});
+  const handleFormatCode = async () => {
+    try {
+      await formatCode();
+    } catch (error) {
+      console.error('❌ Error formateando código:', error);
+    }
   };
 
-  /**
-   * Guardar código
-   */
-  const saveCode = () => {
-    if (!editorRef.current) return;
-    
-    const currentCode = editorRef.current.getValue();
-    // Aquí podrías implementar guardado local o en el WebContainer
-    eventBus.emit('code:saved', { code: currentCode });
+  const handleSaveCode = () => {
+    saveCode();
     console.log('💾 Código guardado');
   };
 
-  /**
-   * Formatear código
-   */
-  const formatCode = () => {
-    if (!editorRef.current) return;
+  const handleNewFile = () => {
+    const template = getTemplateForLanguage();
+    newFile(currentFile, template);
+  };
+
+  const getTemplateForLanguage = () => {
+    const templates = {
+      javascript: `// 🧀 Nuevo archivo JavaScript en CheeseJS
+console.log('¡Hola CheeseJS! 🧀');
+
+// Tu código aquí...
+`,
+      typescript: `// 🧀 Nuevo archivo TypeScript en CheeseJS
+interface Saludo {
+  mensaje: string;
+}
+
+const saludo: Saludo = {
+  mensaje: '¡Hola CheeseJS! 🧀'
+};
+
+console.log(saludo.mensaje);
+`,
+      jsx: `// 🧀 Nuevo archivo JSX en CheeseJS
+import React from 'react';
+
+const Saludo = () => {
+  return (
+    <div>
+      <h1>¡Hola CheeseJS! 🧀</h1>
+    </div>
+  );
+};
+
+export default Saludo;
+`,
+      tsx: `// 🧀 Nuevo archivo TSX en CheeseJS
+import React from 'react';
+
+interface SaludoProps {
+  nombre: string;
+}
+
+const Saludo: React.FC<SaludoProps> = ({ nombre }) => {
+  return (
+    <div>
+      <h1>¡Hola {nombre}! 🧀</h1>
+    </div>
+  );
+};
+
+export default Saludo;
+`
+    };
     
-    editorRef.current.getAction('editor.action.formatDocument').run();
+    return templates[currentLanguage] || templates.javascript;
   };
 
   /**
-   * Manejar cambios en el código
+   * Instalar dependencia faltante
    */
-  const handleEditorChange = (value) => {
-    setCode(value);
-    eventBus.emit('code:changed', { code: value });
+  const handleInstallDependency = async (packageName) => {
+    try {
+      await installDependency(packageName);
+      console.log(`✅ ${packageName} instalado correctamente`);
+    } catch (error) {
+      console.error(`❌ Error instalando ${packageName}:`, error);
+    }
   };
 
-  const getMonacoTheme = () => {
-    if (!isReady) return 'vs-light';
-    return isDarkTheme() ? 'cheesejs-dark' : 'cheesejs-light';
+  /**
+   * Cerrar diálogo de dependencias
+   */
+  const handleCloseDependencyDialog = () => {
+    setShowDependencyDialog(false);
+  };
+
+  // Eliminado: limpiar resultados (gestión en OutputEditor)
+
+  /**
+   * Obtener opciones del editor
+   */
+  const getEditorOptions = () => {
+    return {
+      value: currentCode,
+      language: getMonacoLanguage(currentLanguage),
+      theme: theme?.name || (isDarkTheme() ? 'cheesejs-dark' : 'cheesejs-light'),
+      options: {
+        ...editorConfig,
+        readOnly: isExecuting, // Readonly durante ejecución
+        contextmenu: true,
+        copyWithSyntaxHighlighting: true
+      }
+    };
+  };
+
+  /**
+   * Mapear lenguaje detectado a lenguaje Monaco
+   */
+  const getMonacoLanguage = (language) => {
+    const mapping = {
+      javascript: 'javascript',
+      typescript: 'typescript',
+      jsx: 'javascript',
+      tsx: 'typescript'
+    };
+    return mapping[language] || 'javascript';
   };
 
   return (
     <div className="monaco-editor-container">
-      <div className="editor-wrapper">
-        <Editor
-          height="100%"
-          defaultLanguage="javascript"
-          value={code}
-          onChange={handleEditorChange}
-          onMount={handleEditorDidMount}
-          theme={getMonacoTheme()}
-          options={editorConfig}
-          loading={
-            <div className="editor-loading">
-              <div className="loading-spinner"></div>
-              <p>Cargando Monaco Editor...</p>
-            </div>
-          }
-        />
+      {/* Solo el editor; la salida vive en OutputEditor */}
+      <div className="monaco-editor-panel">
+        {/* Barra de estado del editor */}
+        <div className="monaco-editor-status">
+          <div className="monaco-editor-info">
+            <span className="language-indicator">
+              {languageDetectionService.getLanguageInfo(currentLanguage).displayName}
+            </span>
+            <span className="file-indicator">
+              {currentFile}
+              {hasUnsavedChanges && <span className="unsaved-indicator">●</span>}
+            </span>
+            {missingDependencies.length > 0 && (
+              <span className="dependency-warning" onClick={() => setShowDependencyDialog(true)}>
+                ⚠️ {missingDependencies.length} dependencia(s) faltante(s)
+              </span>
+            )}
+          </div>
+          
+          <div className="monaco-editor-actions">
+            <button 
+              className="editor-action"
+              onClick={handleExecuteCode}
+              disabled={isExecuting}
+              title="Ejecutar código (Ctrl+Enter)"
+            >
+              {isExecuting ? '⏳' : '▶️'}
+            </button>
+            <button 
+              className="editor-action"
+              onClick={handleFormatCode}
+              title="Formatear código (Ctrl+Shift+F)"
+            >
+              🎨
+            </button>
+            <button 
+              className="editor-action"
+              onClick={handleSaveCode}
+              disabled={!hasUnsavedChanges}
+              title="Guardar código (Ctrl+S)"
+            >
+              💾
+            </button>
+          </div>
+        </div>
+        
+        {/* Editor Monaco */}
+        <div className="monaco-editor-wrapper">
+          <Editor
+            height="100%"
+            defaultLanguage="javascript"
+            {...getEditorOptions()}
+            onMount={handleEditorDidMount}
+            loading={<div className="monaco-loading">Cargando editor...</div>}
+          />
+        </div>
       </div>
+      
+      {/* Diálogo de dependencias faltantes */}
+      {showDependencyDialog && (
+        <div className="dependency-dialog-overlay" onClick={handleCloseDependencyDialog}>
+          <div className="dependency-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="dependency-dialog-header">
+              <h3>Dependencias Faltantes</h3>
+              <button 
+                className="close-dialog"
+                onClick={handleCloseDependencyDialog}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="dependency-dialog-content">
+              <p>Se detectaron las siguientes dependencias faltantes:</p>
+              
+              <div className="missing-dependencies">
+                {missingDependencies.map((dep, index) => (
+                  <div key={index} className="missing-dependency">
+                    <div className="dependency-info">
+                      <strong>{dep.name}</strong>
+                      <span className="dependency-reason">{dep.reason}</span>
+                    </div>
+                    
+                    {dep.suggested && (
+                      <button
+                        className="install-dependency"
+                        onClick={() => handleInstallDependency(dep.name)}
+                      >
+                        Instalar
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {suggestedInstallations.length > 0 && (
+                <div className="suggested-installations">
+                  <h4>Instalaciones Sugeridas</h4>
+                  {suggestedInstallations.map((suggestion, index) => (
+                    <div key={index} className="suggestion">
+                      <div className="suggestion-info">
+                        <strong>{suggestion.name}</strong>
+                        <span className="suggestion-description">{suggestion.description}</span>
+                      </div>
+                      <button
+                        className="install-suggestion"
+                        onClick={() => handleInstallDependency(suggestion.name)}
+                      >
+                        Instalar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

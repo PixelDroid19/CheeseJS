@@ -1,11 +1,17 @@
 import { createBaseStore, createInitialState, createBaseActions } from './base-store.js';
+import { cheeseJSCore } from '../core/cheesejs-core.js';
 
 /**
- * EditorStore - Gestión de estado del editor de código
- * Maneja código, archivos, configuración, ejecución y estado de Monaco Editor
+ * EditorStore - Gestión centralizada del estado del editor
+ * Maneja código, lenguajes, ejecución, dependencias y configuración de Monaco
  */
 const initialState = createInitialState({
-  // Estado del código actual
+  // Estado del editor Monaco
+  editorInstance: null,
+  monacoInstance: null,
+  isReady: false,
+  
+  // Gestión de código
   currentCode: `// 🧀 Bienvenido a CheeseJS
 // Escribe tu código JavaScript aquí
 
@@ -44,77 +50,53 @@ obtenerDatos().then(datos => {
 
 // Experimenta con tu código aquí...
 `,
-
-  // Estado de archivos
-  currentFile: null,
-  openFiles: new Map(),
+  savedCode: '',
   hasUnsavedChanges: false,
-  lastSavedContent: '',
-  recentFiles: [],
-  maxRecentFiles: 10,
-
-  // Estado del editor Monaco
-  editorInstance: null,
-  monacoInstance: null,
-  isEditorReady: false,
-  editorDimensions: { width: 0, height: 0 },
-
+  
+  // Gestión de archivos
+  currentFile: 'index.js',
+  currentLanguage: 'javascript',
+  supportedLanguages: ['javascript', 'typescript', 'jsx', 'tsx'],
+  
+  // Estado de ejecución
+  isExecuting: false,
+  executionResult: null,
+  executionError: null,
+  executionTime: 0,
+  executionStartTime: null,
+  
+  // Gestión de dependencias
+  installedPackages: new Set(['@types/node']),
+  missingDependencies: [],
+  suggestedInstallations: [],
+  dependencyInstallInProgress: false,
+  
   // Configuración del editor
   editorConfig: {
-    // Apariencia
     fontSize: 14,
     fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
-    lineHeight: 1.5,
-    letterSpacing: 0,
-    
-    // Comportamiento
     tabSize: 2,
     insertSpaces: true,
     wordWrap: 'on',
-    wordWrapColumn: 80,
-    
-    // UI Elements
     lineNumbers: 'on',
     minimap: { enabled: true },
-    scrollbar: {
-      vertical: 'auto',
-      horizontal: 'auto',
-      useShadows: false,
-      verticalHasArrows: false,
-      horizontalHasArrows: false
-    },
-    
-    // Layout
     automaticLayout: true,
     scrollBeyondLastLine: true,
     smoothScrolling: true,
-    
-    // Cursor
     cursorBlinking: 'blink',
     cursorStyle: 'line',
-    cursorWidth: 2,
-    
-    // Rendering
     renderWhitespace: 'selection',
     renderControlCharacters: false,
-    renderLineHighlight: 'line',
-    renderIndentGuides: true,
-    
-    // Bracket matching
-    matchBrackets: 'always',
-    bracketPairColorization: { enabled: true },
-    
-    // Code folding
+    rulers: [],
     folding: true,
     foldingStrategy: 'auto',
     showFoldingControls: 'mouseover',
-    unfoldOnClickAfterEndOfLine: false,
-    
-    // Selections
+    matchBrackets: 'always',
     selectionHighlight: true,
     occurrencesHighlight: true,
-    
-    // Suggestions
+    bracketPairColorization: { enabled: true },
+    formatOnPaste: true,
+    formatOnType: true,
     acceptSuggestionOnCommitCharacter: true,
     acceptSuggestionOnEnter: 'on',
     snippetSuggestions: 'top',
@@ -122,68 +104,45 @@ obtenerDatos().then(datos => {
     suggestOnTriggerCharacters: true,
     wordBasedSuggestions: true,
     parameterHints: { enabled: true },
-    
-    // Auto closing
     autoClosingBrackets: 'languageDefined',
     autoClosingQuotes: 'languageDefined',
     autoSurround: 'languageDefined',
-    
-    // Formatting
-    formatOnPaste: true,
-    formatOnType: true,
     linkedEditing: false
   },
-
-  // Estado de ejecución
-  isExecuting: false,
-  executionResult: null,
-  executionError: null,
-  executionStartTime: null,
-  executionEndTime: null,
-
-  // Historial y navegación
-  undoHistory: [],
-  redoHistory: [],
-  maxHistorySize: 50,
-  currentHistoryIndex: -1,
-
-  // Estado de selección y cursor
-  cursorPosition: { lineNumber: 1, column: 1 },
-  selectedText: '',
-  selectionRange: null,
-
-  // Estadísticas y métricas
-  stats: {
-    linesOfCode: 0,
-    charactersCount: 0,
-    wordsCount: 0,
-    editingSessions: 0,
+  
+  // Tema del editor (sincronizado con terminal)
+  theme: {
+    name: 'cheesejs-dark',
+    isDark: true,
+    colors: {
+      background: '#1e1e1e',
+      foreground: '#d4d4d4',
+      selection: '#264f78',
+      lineHighlight: '#2a2d2e',
+      cursor: '#ffffff'
+    }
+  },
+  
+  // Estado de formateo
+  isFormatting: false,
+  formatError: null,
+  
+  // Historial de cambios
+  changeHistory: [],
+  maxHistorySize: 100,
+  
+  // Configuración de snippets
+  customSnippets: new Map(),
+  
+  // Estado de autocompletado
+  completionProviders: new Map(),
+  
+  // Métricas de rendimiento
+  performance: {
+    lastExecutionTime: 0,
+    averageExecutionTime: 0,
     totalExecutions: 0,
-    successfulExecutions: 0,
-    errorExecutions: 0
-  },
-
-  // Preferencias de usuario
-  preferences: {
-    autoSave: true,
-    autoSaveInterval: 5000,
-    showLineNumbers: true,
-    showMinimap: true,
-    enableAutocompletion: true,
-    enableLinting: true,
-    enableFormatting: true,
-    vimMode: false
-  },
-
-  // Estado de búsqueda y reemplazo
-  searchState: {
-    query: '',
-    replaceText: '',
-    caseSensitive: false,
-    wholeWord: false,
-    useRegex: false,
-    results: [],
-    currentResultIndex: -1
+    codeComplexity: 0
   }
 });
 
@@ -194,112 +153,141 @@ export const useEditorStore = createBaseStore(
     ...createBaseActions(set, get),
 
     /**
-     * Inicializar el editor
+     * Inicializar editor Monaco
      */
-    initialize: async (editorInstance, monacoInstance) => {
+    initialize: async (editor, monaco) => {
       try {
+        set({ isLoading: true });
+
+        // Configurar editor
+        await get().setupEditor(editor, monaco);
+        
+        // Configurar lenguajes
+        await get().setupLanguageSupport(monaco);
+        
+        // Configurar autocompletado
+        await get().setupAutocompletion(monaco);
+        
+        // Configurar temas
+        await get().setupCustomThemes(monaco);
+
         set({
-          editorInstance,
-          monacoInstance,
-          isEditorReady: true,
-          stats: {
-            ...get().stats,
-            editingSessions: get().stats.editingSessions + 1
-          },
+          editorInstance: editor,
+          monacoInstance: monaco,
+          isReady: true,
+          isLoading: false,
           lastUpdated: new Date().toISOString()
         });
 
-        // Configurar el editor
-        get().setupEditor();
-
-        console.log('📝 EditorStore inicializado');
+        console.log('🖥️ Editor Store inicializado correctamente');
 
       } catch (error) {
-        console.error('❌ Error inicializando EditorStore:', error);
-        set({ error: error.message });
+        console.error('❌ Error inicializando Editor Store:', error);
+        set({
+          isLoading: false,
+          error: error.message
+        });
       }
     },
 
     /**
-     * Configurar el editor con opciones personalizadas
+     * Configurar editor básico
      */
-    setupEditor: () => {
-      const { editorInstance, monacoInstance, editorConfig } = get();
+    setupEditor: async (editor, monaco) => {
+      // Configurar opciones del editor
+      editor.updateOptions(get().editorConfig);
       
-      if (!editorInstance || !monacoInstance) return;
+      // Configurar event listeners
+      editor.onDidChangeModelContent(() => {
+        const code = editor.getValue();
+        get().setCode(code);
+        get().detectLanguage(code);
+        get().checkDependencies(code);
+      });
 
-      try {
-        // Aplicar configuración
-        editorInstance.updateOptions(editorConfig);
-
-        // Configurar event listeners
-        get().setupEventListeners();
-
-        // Configurar temas personalizados
-        get().setupCustomThemes();
-
-        // Configurar atajos de teclado
-        get().setupKeyboardShortcuts();
-
-        console.log('⚙️ Editor configurado correctamente');
-
-      } catch (error) {
-        console.error('❌ Error configurando editor:', error);
-      }
+      editor.onDidChangeCursorSelection(() => {
+        // Manejar cambios de selección si es necesario
+      });
     },
 
     /**
-     * Configurar event listeners del editor
+     * Configurar soporte de lenguajes
      */
-    setupEventListeners: () => {
-      const { editorInstance } = get();
-      if (!editorInstance) return;
-
-      // Cambios en el contenido
-      editorInstance.onDidChangeModelContent(() => {
-        const newCode = editorInstance.getValue();
-        get().updateCode(newCode, false);
+    setupLanguageSupport: async (monaco) => {
+      // Configurar TypeScript
+      monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+        target: monaco.languages.typescript.ScriptTarget.ES2020,
+        allowNonTsExtensions: true,
+        moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+        module: monaco.languages.typescript.ModuleKind.CommonJS,
+        noEmit: true,
+        esModuleInterop: true,
+        jsx: monaco.languages.typescript.JsxEmit.React,
+        reactNamespace: 'React',
+        allowJs: true,
+        typeRoots: ['node_modules/@types']
       });
 
-      // Cambios en la posición del cursor
-      editorInstance.onDidChangeCursorPosition((e) => {
-        set({
-          cursorPosition: {
-            lineNumber: e.position.lineNumber,
-            column: e.position.column
-          }
-        });
+      // Configurar JavaScript
+      monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+        target: monaco.languages.typescript.ScriptTarget.ES2020,
+        allowNonTsExtensions: true,
+        allowJs: true,
+        checkJs: false
       });
+    },
 
-      // Cambios en la selección
-      editorInstance.onDidChangeCursorSelection((e) => {
-        const selectedText = editorInstance.getModel()?.getValueInRange(e.selection) || '';
-        set({
-          selectedText,
-          selectionRange: e.selection
-        });
-      });
-
-      // Cambios en las dimensiones
-      editorInstance.onDidLayoutChange((e) => {
-        set({
-          editorDimensions: {
-            width: e.width,
-            height: e.height
-          }
-        });
+    /**
+     * Configurar autocompletado personalizado
+     */
+    setupAutocompletion: async (monaco) => {
+      // Autocompletado para console
+      monaco.languages.registerCompletionItemProvider('javascript', {
+        provideCompletionItems: (model, position) => {
+          const suggestions = [
+            {
+              label: 'console.log',
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: 'console.log(${1:value});',
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: 'Mostrar valor en la consola'
+            },
+            {
+              label: 'console.error',
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: 'console.error(${1:error});',
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: 'Mostrar error en la consola'
+            }
+          ];
+          
+          return { suggestions };
+        }
       });
     },
 
     /**
      * Configurar temas personalizados
      */
-    setupCustomThemes: () => {
-      const { monacoInstance } = get();
-      if (!monacoInstance) return;
+    setupCustomThemes: async (monaco) => {
+      const currentTheme = get().theme;
+      
+      // Tema oscuro personalizado
+      monaco.editor.defineTheme('cheesejs-dark', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+          { token: 'comment', foreground: '6A9955', fontStyle: 'italic' },
+          { token: 'keyword', foreground: '569CD6', fontStyle: 'bold' },
+          { token: 'string', foreground: 'CE9178' },
+          { token: 'number', foreground: 'B5CEA8' },
+          { token: 'identifier', foreground: '9CDCFE' }
+        ],
+        colors: currentTheme.colors
+      });
 
       // Tema claro personalizado
-      monacoInstance.editor.defineTheme('cheesejs-light', {
+      monaco.editor.defineTheme('cheesejs-light', {
         base: 'vs',
         inherit: true,
         rules: [
@@ -307,8 +295,7 @@ export const useEditorStore = createBaseStore(
           { token: 'keyword', foreground: '0066CC', fontStyle: 'bold' },
           { token: 'string', foreground: '009900' },
           { token: 'number', foreground: 'FF6600' },
-          { token: 'identifier', foreground: '000000' },
-          { token: 'operator', foreground: '666666' }
+          { token: 'identifier', foreground: '000000' }
         ],
         colors: {
           'editor.background': '#FFFFFF',
@@ -318,201 +305,160 @@ export const useEditorStore = createBaseStore(
         }
       });
 
-      // Tema oscuro personalizado
-      monacoInstance.editor.defineTheme('cheesejs-dark', {
-        base: 'vs-dark',
-        inherit: true,
-        rules: [
-          { token: 'comment', foreground: '6A6A6A', fontStyle: 'italic' },
-          { token: 'keyword', foreground: '569CD6', fontStyle: 'bold' },
-          { token: 'string', foreground: 'CE9178' },
-          { token: 'number', foreground: 'B5CEA8' },
-          { token: 'identifier', foreground: 'D4D4D4' },
-          { token: 'operator', foreground: 'D4D4D4' }
-        ],
-        colors: {
-          'editor.background': '#1E1E1E',
-          'editor.foreground': '#D4D4D4',
-          'editor.selectionBackground': '#264F78',
-          'editor.lineHighlightBackground': '#2D2D30'
-        }
-      });
+      // Aplicar tema inicial
+      monaco.editor.setTheme(currentTheme.name);
     },
 
     /**
-     * Configurar atajos de teclado
+     * Establecer código
      */
-    setupKeyboardShortcuts: () => {
-      const { editorInstance, monacoInstance } = get();
-      if (!editorInstance || !monacoInstance) return;
-
-      // Ctrl+S / Cmd+S - Guardar
-      editorInstance.addCommand(
-        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS,
-        () => get().saveCode()
-      );
-
-      // Ctrl+Shift+F / Cmd+Shift+F - Formatear
-      editorInstance.addCommand(
-        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.KeyF,
-        () => get().formatCode()
-      );
-
-      // F5 - Ejecutar código
-      editorInstance.addCommand(
-        monacoInstance.KeyCode.F5,
-        () => get().executeCode()
-      );
-
-      // Ctrl+/ / Cmd+/ - Comentar línea
-      editorInstance.addCommand(
-        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Slash,
-        () => get().toggleComment()
-      );
-    },
-
-    /**
-     * Actualizar código
-     */
-    updateCode: (newCode, addToHistory = true) => {
+    setCode: (code) => {
       const currentState = get();
-      const previousCode = currentState.currentCode;
-
-      // Agregar al historial si es diferente
-      if (addToHistory && newCode !== previousCode) {
-        get().addToHistory(previousCode);
-      }
-
-      // Calcular estadísticas
-      const lines = newCode.split('\n');
-      const stats = {
-        ...currentState.stats,
-        linesOfCode: lines.length,
-        charactersCount: newCode.length,
-        wordsCount: newCode.split(/\s+/).filter(word => word.length > 0).length
-      };
-
-      set({
-        currentCode: newCode,
-        hasUnsavedChanges: newCode !== currentState.lastSavedContent,
-        stats,
+      set({ 
+        currentCode: code,
+        hasUnsavedChanges: code !== currentState.savedCode,
         lastUpdated: new Date().toISOString()
       });
+    },
 
-      // Auto-guardar si está habilitado
-      if (currentState.preferences.autoSave) {
-        get().scheduleAutoSave();
+    /**
+     * Detectar lenguaje automáticamente
+     */
+    detectLanguage: (code, fileName = null) => {
+      let detectedLanguage = 'javascript';
+
+      // Detectar por extensión de archivo
+      if (fileName) {
+        const extension = fileName.split('.').pop()?.toLowerCase();
+        switch (extension) {
+          case 'ts':
+            detectedLanguage = 'typescript';
+            break;
+          case 'tsx':
+            detectedLanguage = 'tsx';
+            break;
+          case 'jsx':
+            detectedLanguage = 'jsx';
+            break;
+          case 'js':
+          default:
+            detectedLanguage = 'javascript';
+        }
+      } else {
+        // Detectar por contenido
+        if (code.includes('interface ') || code.includes('type ') || code.includes(': string') || code.includes(': number')) {
+          detectedLanguage = code.includes('<') && code.includes('/>') ? 'tsx' : 'typescript';
+        } else if (code.includes('<') && code.includes('/>') && (code.includes('React') || code.includes('jsx'))) {
+          detectedLanguage = 'jsx';
+        }
+      }
+
+      const currentState = get();
+      if (detectedLanguage !== currentState.currentLanguage) {
+        set({ currentLanguage: detectedLanguage });
+        get().updateEditorLanguage(detectedLanguage);
+      }
+
+      return detectedLanguage;
+    },
+
+    /**
+     * Actualizar lenguaje del editor
+     */
+    updateEditorLanguage: (language) => {
+      const { editorInstance, monacoInstance } = get();
+      if (editorInstance && monacoInstance) {
+        const model = editorInstance.getModel();
+        if (model) {
+          monacoInstance.editor.setModelLanguage(model, language === 'jsx' || language === 'tsx' ? 'javascript' : language);
+        }
       }
     },
 
     /**
-     * Agregar al historial de deshacer
+     * Detectar dependencias faltantes
      */
-    addToHistory: (code) => {
+    checkDependencies: (code) => {
       const currentState = get();
-      const newHistory = [...currentState.undoHistory, code];
-      const trimmedHistory = newHistory.slice(-currentState.maxHistorySize);
-
-      set({
-        undoHistory: trimmedHistory,
-        redoHistory: [], // Limpiar redo al agregar nueva entrada
-        currentHistoryIndex: trimmedHistory.length - 1
-      });
-    },
-
-    /**
-     * Deshacer cambio
-     */
-    undo: () => {
-      const currentState = get();
+      const importRegex = /import\s+.*?from\s+['"`]([^'"`]+)['"`]/g;
+      const requireRegex = /require\s*\(\s*['"`]([^'"`]+)['"`]\s*\)/g;
       
-      if (currentState.undoHistory.length === 0) return;
+      const dependencies = new Set();
+      let match;
 
-      const previousCode = currentState.undoHistory[currentState.undoHistory.length - 1];
-      const newRedoHistory = [currentState.currentCode, ...currentState.redoHistory];
-      const newUndoHistory = currentState.undoHistory.slice(0, -1);
+      // Extraer imports
+      while ((match = importRegex.exec(code)) !== null) {
+        const dep = match[1];
+        if (!dep.startsWith('.') && !dep.startsWith('/')) {
+          dependencies.add(dep.split('/')[0]);
+        }
+      }
 
-      set({
-        currentCode: previousCode,
-        undoHistory: newUndoHistory,
-        redoHistory: newRedoHistory
-      });
+      // Extraer requires
+      while ((match = requireRegex.exec(code)) !== null) {
+        const dep = match[1];
+        if (!dep.startsWith('.') && !dep.startsWith('/')) {
+          dependencies.add(dep.split('/')[0]);
+        }
+      }
 
-      // Actualizar editor
-      if (currentState.editorInstance) {
-        currentState.editorInstance.setValue(previousCode);
+      // Filtrar dependencias no instaladas
+      const missing = Array.from(dependencies).filter(dep => 
+        !currentState.installedPackages.has(dep) && 
+        !['fs', 'path', 'os', 'crypto', 'util', 'events'].includes(dep) // Módulos nativos de Node.js
+      );
+
+      if (missing.length > 0) {
+        set({ 
+          missingDependencies: missing,
+          suggestedInstallations: missing.map(dep => ({
+            name: dep,
+            suggested: true,
+            description: `Instalar ${dep} para usar en el código`
+          }))
+        });
+      } else {
+        set({ 
+          missingDependencies: [],
+          suggestedInstallations: []
+        });
       }
     },
 
     /**
-     * Rehacer cambio
+     * Instalar dependencia
      */
-    redo: () => {
-      const currentState = get();
-      
-      if (currentState.redoHistory.length === 0) return;
-
-      const nextCode = currentState.redoHistory[0];
-      const newUndoHistory = [...currentState.undoHistory, currentState.currentCode];
-      const newRedoHistory = currentState.redoHistory.slice(1);
-
-      set({
-        currentCode: nextCode,
-        undoHistory: newUndoHistory,
-        redoHistory: newRedoHistory
-      });
-
-      // Actualizar editor
-      if (currentState.editorInstance) {
-        currentState.editorInstance.setValue(nextCode);
-      }
-    },
-
-    /**
-     * Guardar código
-     */
-    saveCode: async () => {
-      const currentState = get();
-      
+    installDependency: async (packageName) => {
       try {
-        // Simular guardado (aquí se integraría con sistema de archivos)
-        await new Promise(resolve => setTimeout(resolve, 100));
+        set({ dependencyInstallInProgress: true });
+
+        // Aquí se integrará con WebContainer para instalar la dependencia
+        console.log(`📦 Instalando ${packageName}...`);
+        
+        // Simular instalación
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const currentState = get();
+        const newInstalled = new Set(currentState.installedPackages);
+        newInstalled.add(packageName);
 
         set({
-          lastSavedContent: currentState.currentCode,
-          hasUnsavedChanges: false,
-          lastUpdated: new Date().toISOString()
+          installedPackages: newInstalled,
+          missingDependencies: currentState.missingDependencies.filter(dep => dep !== packageName),
+          suggestedInstallations: currentState.suggestedInstallations.filter(inst => inst.name !== packageName),
+          dependencyInstallInProgress: false
         });
 
-        // Agregar a archivos recientes si tiene nombre
-        if (currentState.currentFile) {
-          get().addToRecentFiles(currentState.currentFile);
-        }
-
-        console.log('💾 Código guardado');
-        return true;
+        console.log(`✅ ${packageName} instalado correctamente`);
 
       } catch (error) {
-        console.error('❌ Error guardando código:', error);
-        set({ error: error.message });
-        return false;
+        console.error(`❌ Error instalando ${packageName}:`, error);
+        set({
+          dependencyInstallInProgress: false,
+          error: `Error instalando ${packageName}: ${error.message}`
+        });
       }
     },
-
-    /**
-     * Programar auto-guardado
-     */
-    scheduleAutoSave: (() => {
-      let timeout;
-      return () => {
-        const { preferences } = get();
-        
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          get().saveCode();
-        }, preferences.autoSaveInterval);
-      };
-    })(),
 
     /**
      * Ejecutar código
@@ -520,56 +466,60 @@ export const useEditorStore = createBaseStore(
     executeCode: async () => {
       const currentState = get();
       
-      if (currentState.isExecuting) return;
+      if (currentState.isExecuting) {
+        console.warn('⚠️ Ejecución ya en progreso');
+        return;
+      }
 
       try {
+        const startTime = Date.now();
+        
         set({
           isExecuting: true,
-          executionStartTime: new Date().toISOString(),
-          executionResult: null,
-          executionError: null
+          executionStartTime: startTime,
+          executionError: null,
+          executionResult: null
         });
 
-        // Simular ejecución (aquí se integraría con WebContainer)
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('🚀 Ejecutando código...');
 
-        // Simular resultado exitoso
-        const result = {
-          output: 'Código ejecutado correctamente',
-          exitCode: 0,
-          duration: 1000
+        // Ejecutar realmente el código en WebContainer a través del Core
+        const result = await cheeseJSCore.executeCode(currentState.currentCode, {
+          filename: currentState.currentFile
+        });
+        
+        const endTime = Date.now();
+        const executionTime = endTime - startTime;
+
+        // Actualizar métricas
+        const newPerformance = {
+          ...currentState.performance,
+          lastExecutionTime: executionTime,
+          totalExecutions: currentState.performance.totalExecutions + 1,
+          averageExecutionTime: ((currentState.performance.averageExecutionTime * currentState.performance.totalExecutions) + executionTime) / (currentState.performance.totalExecutions + 1)
         };
 
         set({
           isExecuting: false,
           executionResult: result,
-          executionEndTime: new Date().toISOString(),
-          stats: {
-            ...currentState.stats,
-            totalExecutions: currentState.stats.totalExecutions + 1,
-            successfulExecutions: currentState.stats.successfulExecutions + 1
-          },
+          executionTime,
+          performance: newPerformance,
           lastUpdated: new Date().toISOString()
         });
 
-        console.log('▶️ Código ejecutado:', result);
-        return result;
+        console.log('✅ Código ejecutado correctamente');
 
       } catch (error) {
         console.error('❌ Error ejecutando código:', error);
         
         set({
           isExecuting: false,
-          executionError: error.message,
-          executionEndTime: new Date().toISOString(),
-          stats: {
-            ...currentState.stats,
-            totalExecutions: currentState.stats.totalExecutions + 1,
-            errorExecutions: currentState.stats.errorExecutions + 1
+          executionError: {
+            message: error.message,
+            type: 'execution_error',
+            timestamp: new Date().toISOString()
           }
         });
-
-        return null;
       }
     },
 
@@ -577,207 +527,172 @@ export const useEditorStore = createBaseStore(
      * Formatear código
      */
     formatCode: async () => {
-      const { editorInstance } = get();
+      const currentState = get();
       
-      if (!editorInstance) return;
+      if (!currentState.editorInstance || currentState.isFormatting) {
+        return;
+      }
 
       try {
-        await editorInstance.getAction('editor.action.formatDocument').run();
-        console.log('🎨 Código formateado');
+        set({ isFormatting: true, formatError: null });
+
+        await currentState.editorInstance.getAction('editor.action.formatDocument').run();
+
+        set({ isFormatting: false });
+        console.log('✅ Código formateado');
+
       } catch (error) {
         console.error('❌ Error formateando código:', error);
+        set({
+          isFormatting: false,
+          formatError: error.message
+        });
       }
     },
 
     /**
-     * Comentar/descomentar línea
+     * Guardar código
      */
-    toggleComment: () => {
-      const { editorInstance } = get();
-      
-      if (!editorInstance) return;
-
-      try {
-        editorInstance.getAction('editor.action.commentLine').run();
-      } catch (error) {
-        console.error('❌ Error comentando línea:', error);
-      }
+    saveCode: () => {
+      const currentState = get();
+      set({
+        savedCode: currentState.currentCode,
+        hasUnsavedChanges: false,
+        lastUpdated: new Date().toISOString()
+      });
+      console.log('💾 Código guardado');
     },
 
     /**
      * Crear nuevo archivo
      */
-    newFile: () => {
-      const defaultCode = `// 🧀 Nuevo archivo en CheeseJS
-// Escribe tu código JavaScript aquí
+    newFile: (fileName = 'index.js', template = '') => {
+      const language = get().detectLanguage(template, fileName);
+      
+      set({
+        currentFile: fileName,
+        currentCode: template || get().getDefaultTemplate(language),
+        currentLanguage: language,
+        savedCode: '',
+        hasUnsavedChanges: false,
+        lastUpdated: new Date().toISOString()
+      });
+    },
 
+    /**
+     * Obtener plantilla por defecto para un lenguaje
+     */
+    getDefaultTemplate: (language) => {
+      const templates = {
+        javascript: `// 🧀 Nuevo archivo JavaScript en CheeseJS
 console.log('¡Hola CheeseJS! 🧀');
 
 // Tu código aquí...
-`;
+`,
+        typescript: `// 🧀 Nuevo archivo TypeScript en CheeseJS
+interface Saludo {
+  mensaje: string;
+}
 
-      set({
-        currentCode: defaultCode,
-        currentFile: null,
-        hasUnsavedChanges: false,
-        lastSavedContent: '',
-        undoHistory: [],
-        redoHistory: [],
-        lastUpdated: new Date().toISOString()
-      });
+const saludo: Saludo = {
+  mensaje: '¡Hola CheeseJS! 🧀'
+};
 
-      // Actualizar editor
-      const { editorInstance } = get();
-      if (editorInstance) {
-        editorInstance.setValue(defaultCode);
-      }
+console.log(saludo.mensaje);
+
+// Tu código aquí...
+`,
+        jsx: `// 🧀 Nuevo archivo JSX en CheeseJS
+import React from 'react';
+
+const Saludo = () => {
+  return (
+    <div>
+      <h1>¡Hola CheeseJS! 🧀</h1>
+      <p>Componente React en CheeseJS</p>
+    </div>
+  );
+};
+
+export default Saludo;
+`,
+        tsx: `// 🧀 Nuevo archivo TSX en CheeseJS
+import React from 'react';
+
+interface SaludoProps {
+  nombre: string;
+}
+
+const Saludo: React.FC<SaludoProps> = ({ nombre }) => {
+  return (
+    <div>
+      <h1>¡Hola {nombre}! 🧀</h1>
+      <p>Componente React TypeScript en CheeseJS</p>
+    </div>
+  );
+};
+
+export default Saludo;
+`
+      };
+
+      return templates[language] || templates.javascript;
     },
 
     /**
      * Actualizar configuración del editor
      */
-    updateEditorConfig: (newConfig) => {
+    updateConfig: (newConfig) => {
       const currentState = get();
       const updatedConfig = { ...currentState.editorConfig, ...newConfig };
-
-      set({
-        editorConfig: updatedConfig,
-        lastUpdated: new Date().toISOString()
-      });
-
-      // Aplicar configuración al editor
-      if (currentState.editorInstance) {
-        currentState.editorInstance.updateOptions(updatedConfig);
-      }
-    },
-
-    /**
-     * Actualizar preferencias
-     */
-    updatePreferences: (newPreferences) => {
-      const currentState = get();
-      set({
-        preferences: { ...currentState.preferences, ...newPreferences },
-        lastUpdated: new Date().toISOString()
-      });
-    },
-
-    /**
-     * Agregar a archivos recientes
-     */
-    addToRecentFiles: (filePath) => {
-      const currentState = get();
-      const newRecentFiles = [
-        filePath,
-        ...currentState.recentFiles.filter(f => f !== filePath)
-      ].slice(0, currentState.maxRecentFiles);
-
-      set({
-        recentFiles: newRecentFiles,
-        lastUpdated: new Date().toISOString()
-      });
-    },
-
-    /**
-     * Buscar en código
-     */
-    search: (query, options = {}) => {
-      const { editorInstance } = get();
-      if (!editorInstance) return [];
-
-      const searchOptions = {
-        caseSensitive: options.caseSensitive || false,
-        wholeWord: options.wholeWord || false,
-        useRegex: options.useRegex || false
-      };
-
-      try {
-        const matches = editorInstance.getModel()?.findMatches(
-          query,
-          true, // searchOnlyEditableRange
-          searchOptions.useRegex,
-          searchOptions.caseSensitive,
-          searchOptions.wholeWord ? '\\b' : null,
-          true // captureMatches
-        ) || [];
-
-        set({
-          searchState: {
-            query,
-            ...searchOptions,
-            results: matches,
-            currentResultIndex: matches.length > 0 ? 0 : -1
-          }
-        });
-
-        return matches;
-      } catch (error) {
-        console.error('❌ Error en búsqueda:', error);
-        return [];
-      }
-    },
-
-    /**
-     * Ir al siguiente resultado de búsqueda
-     */
-    findNext: () => {
-      const { searchState, editorInstance } = get();
       
-      if (!editorInstance || searchState.results.length === 0) return;
+      set({ editorConfig: updatedConfig });
+      
+      // Aplicar configuración al editor activo
+      if (currentState.editorInstance) {
+        currentState.editorInstance.updateOptions(newConfig);
+      }
+    },
 
-      const nextIndex = (searchState.currentResultIndex + 1) % searchState.results.length;
-      const match = searchState.results[nextIndex];
-
-      editorInstance.setSelection(match.range);
-      editorInstance.revealRangeInCenter(match.range);
-
-      set({
-        searchState: {
-          ...searchState,
-          currentResultIndex: nextIndex
-        }
-      });
+    /**
+     * Actualizar tema
+     */
+    updateTheme: (newTheme) => {
+      const currentState = get();
+      const updatedTheme = { ...currentState.theme, ...newTheme };
+      
+      set({ theme: updatedTheme });
+      
+      // Aplicar tema al editor activo
+      if (currentState.monacoInstance) {
+        currentState.monacoInstance.editor.setTheme(updatedTheme.name);
+      }
     },
 
     /**
      * Obtener estadísticas del editor
      */
     getStats: () => {
-      return get().stats;
+      const currentState = get();
+      return {
+        ...currentState.performance,
+        codeLength: currentState.currentCode.length,
+        hasUnsavedChanges: currentState.hasUnsavedChanges,
+        currentLanguage: currentState.currentLanguage,
+        missingDependencies: currentState.missingDependencies.length,
+        isExecuting: currentState.isExecuting
+      };
     },
 
     /**
      * Resetear editor
      */
     reset: () => {
-      const { editorInstance } = get();
-      
       set({
         ...initialState,
-        editorInstance,
+        editorInstance: get().editorInstance,
         monacoInstance: get().monacoInstance,
-        isEditorReady: get().isEditorReady
-      });
-
-      if (editorInstance) {
-        editorInstance.setValue(initialState.currentCode);
-      }
-    },
-
-    /**
-     * Limpiar recursos
-     */
-    dispose: () => {
-      const { editorInstance } = get();
-      
-      if (editorInstance) {
-        editorInstance.dispose();
-      }
-
-      set({
-        editorInstance: null,
-        monacoInstance: null,
-        isEditorReady: false
+        isReady: get().isReady
       });
     }
   }),
@@ -785,17 +700,16 @@ console.log('¡Hola CheeseJS! 🧀');
     persist: true,
     persistKey: 'cheesejs-editor-store',
     devtools: true,
-    // Persistir configuración y preferencias, no el código actual
+    // Persistir configuración y código guardado
     partialize: (state) => ({
       editorConfig: state.editorConfig,
-      preferences: state.preferences,
-      recentFiles: state.recentFiles,
-      stats: {
-        editingSessions: state.stats.editingSessions,
-        totalExecutions: state.stats.totalExecutions,
-        successfulExecutions: state.stats.successfulExecutions,
-        errorExecutions: state.stats.errorExecutions
-      }
+      theme: state.theme,
+      savedCode: state.savedCode,
+      currentFile: state.currentFile,
+      currentLanguage: state.currentLanguage,
+      installedPackages: Array.from(state.installedPackages),
+      customSnippets: Array.from(state.customSnippets.entries()),
+      performance: state.performance
     })
   }
 );

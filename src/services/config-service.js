@@ -403,6 +403,111 @@ class ConfigService {
   }
 
   /**
+   * Obtener configuración del editor
+   * @returns {Object}
+   */
+  getEditorConfig() {
+    return {
+      fontSize: this.get('editor.fontSize', 14),
+      fontFamily: this.get('editor.fontFamily', 'Monaco, Menlo, "Ubuntu Mono", monospace'),
+      tabSize: this.get('editor.tabSize', 2),
+      insertSpaces: this.get('editor.insertSpaces', true),
+      wordWrap: this.get('editor.wordWrap', 'on'),
+      lineNumbers: this.get('editor.lineNumbers', 'on'),
+      minimap: this.get('editor.minimap', true),
+      automaticLayout: this.get('editor.automaticLayout', true),
+      scrollBeyondLastLine: this.get('editor.scrollBeyondLastLine', true),
+      cursorBlinking: this.get('editor.cursorBlinking', 'blink'),
+      cursorStyle: this.get('editor.cursorStyle', 'line'),
+      renderWhitespace: this.get('editor.renderWhitespace', 'selection'),
+      bracketPairColorization: this.get('editor.bracketPairColorization', true),
+      formatOnPaste: this.get('editor.formatOnPaste', true),
+      formatOnType: this.get('editor.formatOnType', true),
+      acceptSuggestionOnEnter: this.get('editor.acceptSuggestionOnEnter', 'on'),
+      quickSuggestions: this.get('editor.quickSuggestions', true),
+      autoClosingBrackets: this.get('editor.autoClosingBrackets', 'languageDefined'),
+      folding: this.get('editor.folding', true),
+      matchBrackets: this.get('editor.matchBrackets', 'always'),
+      selectionHighlight: this.get('editor.selectionHighlight', true)
+    };
+  }
+
+  /**
+   * Obtener configuración del terminal
+   * @returns {Object}
+   */
+  getTerminalConfig() {
+    return {
+      fontSize: this.get('console.fontSize', 13),
+      fontFamily: this.get('console.fontFamily', 'Monaco, Menlo, "Ubuntu Mono", monospace'),
+      maxLines: this.get('console.maxLines', 1000),
+      wordWrap: this.get('console.wordWrap', true),
+      timestamp: this.get('console.timestamp', true),
+      clearOnRun: this.get('console.clearOnRun', false),
+      groupSimilarMessages: this.get('console.groupSimilarMessages', true),
+      showLogLevel: this.get('console.showLogLevel', true)
+    };
+  }
+
+  /**
+   * Obtener configuración de WebContainer
+   * @returns {Object}
+   */
+  getWebContainerConfig() {
+    return {
+      timeout: this.get('webcontainer.timeout', 30000),
+      maxMemory: this.get('webcontainer.maxMemory', 512),
+      enableNodemon: this.get('webcontainer.enableNodemon', true),
+      npmRegistry: this.get('webcontainer.npmRegistry', 'https://registry.npmjs.org/'),
+      defaultPackages: this.get('webcontainer.defaultPackages', ['lodash', 'axios', 'moment']),
+      installTimeout: this.get('webcontainer.installTimeout', 60000),
+      autoInstallTypes: this.get('webcontainer.autoInstallTypes', true)
+    };
+  }
+
+  /**
+   * Obtener configuración de layout
+   * @returns {Object}
+   */
+  getLayoutConfig() {
+    return {
+      sidebarWidth: this.get('layout.sidebarWidth', 250),
+      consoleHeight: this.get('layout.consoleHeight', 200),
+      showSidebar: this.get('layout.showSidebar', true),
+      showConsole: this.get('layout.showConsole', true),
+      sidebarPosition: this.get('layout.sidebarPosition', 'left'),
+      consolePosition: this.get('layout.consolePosition', 'bottom'),
+      panelSizes: this.get('layout.panelSizes', { editor: 60, console: 30, sidebar: 10 })
+    };
+  }
+
+  /**
+   * Obtener configuración general
+   * @returns {Object}
+   */
+  getGeneralConfig() {
+    return {
+      autoSave: this.get('general.autoSave', true),
+      autoSaveInterval: this.get('general.autoSaveInterval', 5000),
+      language: this.get('general.language', 'es'),
+      theme: this.get('general.theme', 'light'),
+      showWelcome: this.get('general.showWelcome', true),
+      enableTelemetry: this.get('general.enableTelemetry', false),
+      updateChannel: this.get('general.updateChannel', 'stable')
+    };
+  }
+
+  /**
+   * Actualizar configuración (método helper)
+   * @param {Object} updates - Actualizaciones de configuración
+   */
+  updateConfig(updates) {
+    Object.entries(updates).forEach(([key, value]) => {
+      this.set(key, value);
+    });
+  }
+
+  /**
    * Obtener toda la configuración
    * @returns {Object}
    */
